@@ -16,31 +16,31 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ? Nền */
-  --bg:        #0c0f1a;
-  --surface:   #131929;
-  --surface2:  #1a2235;
-  --surface3:  #1f2a40;
-  --border:    rgba(255,255,255,0.07);
-  --border2:   rgba(255,255,255,0.12);
+  /* ? Nền — light theme */
+  --bg:        #f0f2f7;
+  --surface:   #ffffff;
+  --surface2:  #f5f7fb;
+  --surface3:  #e8ecf4;
+  --border:    rgba(0,0,0,0.08);
+  --border2:   rgba(0,0,0,0.15);
 
   /* ? Chữ */
-  --text:      #dde3f0;
-  --text2:     #7a86a0;
-  --text3:     #3d4a62;
+  --text:      #1a2035;
+  --text2:     #5a6480;
+  --text3:     #9aa3b8;
 
-  /* ! Màu accent */
-  --green:     #00e87a;
-  --green-d:   rgba(0,232,122,0.1);
-  --green-b:   rgba(0,232,122,0.25);
-  --red:       #ff4d6a;
-  --red-d:     rgba(255,77,106,0.1);
-  --blue:      #4d9fff;
-  --blue-d:    rgba(77,159,255,0.1);
-  --purple:    #b47fff;
-  --purple-d:  rgba(180,127,255,0.1);
-  --amber:     #ffbe4d;
-  --amber-d:   rgba(255,190,77,0.1);
+  /* ! Màu accent — giữ nguyên, chỉ điều chỉnh dim cho nền sáng */
+  --green:     #00a854;
+  --green-d:   rgba(0,168,84,0.1);
+  --green-b:   rgba(0,168,84,0.2);
+  --red:       #e8294a;
+  --red-d:     rgba(232,41,74,0.08);
+  --blue:      #2176e8;
+  --blue-d:    rgba(33,118,232,0.08);
+  --purple:    #7c4dcc;
+  --purple-d:  rgba(124,77,204,0.08);
+  --amber:     #d97b00;
+  --amber-d:   rgba(217,123,0,0.08);
 
   --font:   'Be Vietnam Pro', sans-serif;
   --mono:   'JetBrains Mono', monospace;
@@ -63,6 +63,9 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 button { font-family: var(--font); cursor: pointer; border: none; background: none; }
 select, input { font-family: var(--font); }
 * { scrollbar-width: thin; scrollbar-color: var(--surface3) transparent; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
 
 /*
 !======================================================================================================================================
@@ -128,7 +131,7 @@ body { display: flex; }
 .logo-icon {
   width: 36px; height: 36px;
   background: var(--green);
-  color: #000;
+  color: #fff;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -311,7 +314,7 @@ body { display: flex; }
 
 .btn-add {
   background: var(--green);
-  color: #000;
+  color: #fff;
   font-weight: 700;
   font-size: 13px;
   padding: 7px 14px;
@@ -859,7 +862,7 @@ body { display: flex; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.75);
+  background: rgba(0,0,0,0.45);
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -962,7 +965,7 @@ body { display: flex; }
 
 .btn-submit {
   background: var(--green);
-  color: #000;
+  color: #fff;
   font-weight: 800;
   font-size: 14px;
   padding: 11px;
@@ -974,8 +977,8 @@ body { display: flex; }
 
 .btn-submit:hover { opacity: .85; }
 
-/* ? Select dark */
-select.fi option { background: var(--surface2); }
+/* ? Select light */
+select.fi option { background: #ffffff; color: var(--text); }
 
 /*
 !======================================================================================================================================
@@ -1136,7 +1139,7 @@ select.fi option { background: var(--surface2); }
 
   .sidebar.open {
     transform: translateX(0);
-    box-shadow: 4px 0 30px rgba(0,0,0,.5);
+    box-shadow: 4px 0 30px rgba(0,0,0,0.15);
   }
 
   .main { margin-left: 0; }

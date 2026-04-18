@@ -2,11 +2,36 @@
 
 /*
 !=======================================================================================
- ! MODELS/TRANSACTION.MODEL.JS — Query bảng transactions
+ ! MODELS/TRANSACTION.MODEL.JS — Schema giao dịch (Mongoose)
 !=======================================================================================
 */
 
-const { pool } = require('../config/database');
+const mongoose = require('mongoose');
+
+/*
+!=======================================================================================
+ ! Schema
+!=======================================================================================
+*/
+
+const SchemaGiaoDich = new mongoose.Schema({
+    period_id     : { type: mongoose.Schema.Types.ObjectId, ref: 'Period',   required: true },
+    category_id   : { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    type          : {
+        type: String,
+        enum: ['income','expense','saving','debt_give','debt_take','debt_collect','debt_pay','adjustment'],
+        required: true,
+    },
+    amount        : { type: Number, required: true, min: 0 },
+    trans_date    : { type: Date, required: true },
+    note          : { type: String, default: '' },
+    is_adjustment : { type: Boolean, default: false },
+}, { timestamps: true });
+
+SchemaGiaoDich.index({ period_id: 1, trans_date: -1 });
+SchemaGiaoDich.index({ period_id: 1, type: 1 });
+
+const GiaoDich = mongoose.model('Transaction', SchemaGiaoDich);
 
 /*
 !======================================================================================================================================
@@ -14,137 +39,93 @@ const { pool } = require('../config/database');
 
 const GiaoDichModel = {
 
-    /*
-    !=======================================================================================
-     ? Lấy danh sách giao dịch theo kỳ tháng — có thể lọc theo loại
-    !=======================================================================================
-    */
     layTheoKy: async (kyThangId, loai = null) => {
-        let cauQuery = `
-            SELECT
-                t.*,
-                c.name  AS tenDanhMuc,
-                c.icon  AS iconDanhMuc,
-                c.color AS mauDanhMuc
-            FROM transactions t
-            JOIN categories c ON c.id = t.category_id
-            WHERE t.period_id = ?
-        `;
-        const thamSo = [kyThangId];
-
-        // ? Lọc theo loại nếu có truyền vào
-        if (loai) {
-            cauQuery += ` AND t.type = ?`;
-            thamSo.push(loai);
-        }
-
-        cauQuery += ` ORDER BY t.trans_date DESC, t.created_at DESC`;
-
-        const [danhSach] = await pool.query(cauQuery, thamSo);
-        return danhSach;
+        const boLoc = { period_id: kyThangId };
+        if (loai) boLoc.type = loai;
+        return GiaoDich.find(boLoc)
+            .populate('category_id', 'name icon color type')
+            .sort({ trans_date: -1, createdAt: -1 });
     },
 
-    /*
-    !=======================================================================================
-     ? Lấy giao dịch theo ngày cụ thể
-    !=======================================================================================
-    */
-    layTheoNgay: async (kyThangId, ngay) => {
-        const [danhSach] = await pool.query(
-            `SELECT
-                t.*,
-                c.name  AS tenDanhMuc,
-                c.icon  AS iconDanhMuc,
-                c.color AS mauDanhMuc
-             FROM transactions t
-             JOIN categories c ON c.id = t.category_id
-             WHERE t.period_id = ? AND t.trans_date = ?
-             ORDER BY t.created_at DESC`,
-            [kyThangId, ngay]
-        );
-        return danhSach;
-    },
-
-    /*
-    !=======================================================================================
-     ! Thêm giao dịch mới
-    !=======================================================================================
-    */
-    them: async ({ kyThangId, danhMucId, loai, soTien, ngay, ghiChu }) => {
-        const [ketQua] = await pool.query(
-            `INSERT INTO transactions
-                (period_id, category_id, type, amount, trans_date, note)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [kyThangId, danhMucId, loai, soTien, ngay, ghiChu || null]
-        );
-        return ketQua.insertId;
-    },
-
-    /*
-    !=======================================================================================
-     ? Sửa giao dịch
-     ! Không cho sửa nếu kỳ đã chốt — kiểm tra ở controller
-    !=======================================================================================
-    */
-    sua: async (id, { danhMucId, loai, soTien, ngay, ghiChu }) => {
-        await pool.query(
-            `UPDATE transactions
-             SET category_id = ?,
-                 type        = ?,
-                 amount      = ?,
-                 trans_date  = ?,
-                 note        = ?
-             WHERE id = ?`,
-            [danhMucId, loai, soTien, ngay, ghiChu || null, id]
-        );
-    },
-
-    /*
-    !=======================================================================================
-     ! Xoá giao dịch
-     ! Không cho xoá nếu kỳ đã chốt — kiểm tra ở controller
-    !=======================================================================================
-    */
-    xoa: async (id) => {
-        await pool.query(`DELETE FROM transactions WHERE id = ?`, [id]);
-    },
-
-    /*
-    !=======================================================================================
-     ? Lấy 1 giao dịch theo ID — dùng khi sửa/xoá để kiểm tra quyền
-    !=======================================================================================
-    */
     layTheoId: async (id) => {
-        const [danhSach] = await pool.query(
-            `SELECT t.*, c.name AS tenDanhMuc
-             FROM transactions t
-             JOIN categories c ON c.id = t.category_id
-             WHERE t.id = ?`,
-            [id]
-        );
-        return danhSach[0] || null;
+        return GiaoDich.findById(id).populate('category_id', 'name icon color');
     },
 
-    /*
-    !=======================================================================================
-     ! Thêm dòng điều chỉnh chênh lệch khi chốt tháng
-     ? Tự động tạo khi soduThucTe != soduHeThong
-    !=======================================================================================
-    */
+    them: async ({ kyThangId, danhMucId, loai, soTien, ngay, ghiChu }) => {
+        const gd = new GiaoDich({
+            period_id   : kyThangId,
+            category_id : danhMucId,
+            type        : loai,
+            amount      : soTien,
+            trans_date  : new Date(ngay),
+            note        : ghiChu || '',
+        });
+        return gd.save();
+    },
+
+    sua: async (id, { danhMucId, loai, soTien, ngay, ghiChu }) => {
+        return GiaoDich.findByIdAndUpdate(id, {
+            category_id : danhMucId,
+            type        : loai,
+            amount      : soTien,
+            trans_date  : new Date(ngay),
+            note        : ghiChu || '',
+        });
+    },
+
+    xoa: async (id) => GiaoDich.findByIdAndDelete(id),
+
+    // ! Thêm dòng điều chỉnh chênh lệch cuối tháng
     themDieuChinh: async (kyThangId, soTienChenhLech, danhMucId) => {
         const loai = soTienChenhLech >= 0 ? 'income' : 'expense';
-        await pool.query(
-            `INSERT INTO transactions
-                (period_id, category_id, type, amount, trans_date, note, is_adjustment)
-             VALUES (?, ?, ?, ?, CURDATE(), 'Điều chỉnh chênh lệch cuối tháng', 1)`,
-            [kyThangId, danhMucId, loai, Math.abs(soTienChenhLech)]
-        );
+        return GiaoDich.create({
+            period_id     : kyThangId,
+            category_id   : danhMucId,
+            type          : loai,
+            amount        : Math.abs(soTienChenhLech),
+            trans_date    : new Date(),
+            note          : 'Điều chỉnh chênh lệch cuối tháng',
+            is_adjustment : true,
+        });
     },
 
+    // ? Tính tổng hợp cho 1 kỳ (thay thế view MySQL)
+    tinhTongHop: async (kyThangId) => {
+        const ketQua = await GiaoDich.aggregate([
+            { $match: { period_id: new mongoose.Types.ObjectId(kyThangId), is_adjustment: false } },
+            { $group: {
+                _id         : null,
+                total_income  : { $sum: { $cond: [{ $in: ['$type', ['income','debt_take','debt_collect']] }, '$amount', 0] } },
+                total_expense : { $sum: { $cond: [{ $in: ['$type', ['expense','debt_give','debt_pay','saving']] }, '$amount', 0] } },
+                total_saving  : { $sum: { $cond: [{ $eq: ['$type', 'saving'] }, '$amount', 0] } },
+            }},
+        ]);
+        return ketQua[0] || { total_income: 0, total_expense: 0, total_saving: 0 };
+    },
+
+    // ? Tổng hợp theo danh mục
+    tinhTheoCategory: async (kyThangId) => {
+        return GiaoDich.aggregate([
+            { $match: { period_id: new mongoose.Types.ObjectId(kyThangId), is_adjustment: false } },
+            { $group: {
+                _id           : '$category_id',
+                tongTien      : { $sum: '$amount' },
+                soGiaoDich    : { $count: {} },
+            }},
+            { $lookup: { from: 'categories', localField: '_id', foreignField: '_id', as: 'danhMuc' } },
+            { $unwind: '$danhMuc' },
+            { $project: {
+                danhMucId   : '$_id',
+                tenDanhMuc  : '$danhMuc.name',
+                iconDanhMuc : '$danhMuc.icon',
+                mauDanhMuc  : '$danhMuc.color',
+                nhom        : '$danhMuc.type',
+                tongTien    : 1,
+                soGiaoDich  : 1,
+            }},
+            { $sort: { tongTien: -1 } },
+        ]);
+    },
 };
 
-/*
-!======================================================================================================================================
-*/
-
-module.exports = GiaoDichModel;
+module.exports = { GiaoDichModel, GiaoDich };

@@ -2,109 +2,65 @@
 
 /*
 !=======================================================================================
- ! MODELS/REPORT.MODEL.JS — Query báo cáo tháng & năm
+ ! MODELS/REPORT.MODEL.JS — Query báo cáo (Mongoose)
 !=======================================================================================
 */
 
-const { pool } = require('../config/database');
-
-/*
-!======================================================================================================================================
-*/
+const mongoose = require('mongoose');
 
 const BaoCaoModel = {
 
-    /*
-    !=======================================================================================
-     ? Báo cáo tổng hợp 1 tháng — dùng view v_monthly_summary
-    !=======================================================================================
-    */
-    tongHopThang: async (kyThangId) => {
-        const [ketQua] = await pool.query(
-            `SELECT * FROM v_monthly_summary WHERE period_id = ?`,
-            [kyThangId]
-        );
-        return ketQua[0] || null;
+    tongHopThang: async (kyThangId, openingBalance) => {
+        const { GiaoDichModel } = require('./transaction.model');
+        const tongHop = await GiaoDichModel.tinhTongHop(kyThangId);
+        return {
+            ...tongHop,
+            opening_balance         : openingBalance,
+            system_closing_balance  : openingBalance + tongHop.total_income - tongHop.total_expense,
+        };
     },
 
-    /*
-    !=======================================================================================
-     ? Báo cáo chi tiết theo danh mục trong 1 tháng
-    !=======================================================================================
-    */
     chiTietTheoDanhMuc: async (kyThangId) => {
-        const [danhSach] = await pool.query(
-            `SELECT
-                c.id                       AS danhMucId,
-                c.name                     AS tenDanhMuc,
-                c.icon                     AS iconDanhMuc,
-                c.color                    AS mauDanhMuc,
-                c.type                     AS nhom,
-                COUNT(t.id)                AS soGiaoDich,
-                COALESCE(SUM(t.amount), 0) AS tongTien
-             FROM categories c
-             LEFT JOIN transactions t
-                ON t.category_id    = c.id
-                AND t.period_id     = ?
-                AND t.is_adjustment = 0
-             WHERE c.is_active = 1
-             GROUP BY c.id, c.name, c.icon, c.color, c.type
-             ORDER BY nhom, tongTien DESC`,
-            [kyThangId]
-        );
-        return danhSach;
+        const { GiaoDichModel } = require('./transaction.model');
+        return GiaoDichModel.tinhTheoCategory(kyThangId);
     },
 
-    /*
-    !=======================================================================================
-     ! Báo cáo năm — tổng hợp từng tháng trong 1 năm
-    !=======================================================================================
-    */
+    // ! Báo cáo năm — tổng hợp từng tháng
     tongHopNam: async (nam) => {
-        const [danhSach] = await pool.query(
-            `SELECT
-                mp.month                                            AS thang,
-                mp.year                                             AS nam,
-                mp.opening_balance                                  AS soDauKy,
-                COALESCE(SUM(CASE
-                    WHEN t.type IN ('income','debt_take','debt_collect')
-                    THEN t.amount ELSE 0 END), 0)                   AS tongThu,
-                COALESCE(SUM(CASE
-                    WHEN t.type IN ('expense','debt_give','debt_pay','saving')
-                    THEN t.amount ELSE 0 END), 0)                   AS tongChi,
-                COALESCE(SUM(CASE
-                    WHEN t.type = 'saving'
-                    THEN t.amount ELSE 0 END), 0)                   AS tietKiem
-             FROM monthly_periods mp
-             LEFT JOIN transactions t
-                ON t.period_id      = mp.id
-                AND t.is_adjustment = 0
-             WHERE mp.year = ?
-             GROUP BY mp.id, mp.month, mp.year, mp.opening_balance
-             ORDER BY mp.month ASC`,
-            [nam]
-        );
-        return danhSach;
+        const { KyThang }   = require('./period.model');
+        const { GiaoDich }  = require('./transaction.model');
+
+        const cacKy = await KyThang.find({ year: nam }).sort({ month: 1 });
+
+        const ketQua = await Promise.all(cacKy.map(async (ky) => {
+            const tongHop = await GiaoDich.aggregate([
+                { $match: { period_id: ky._id, is_adjustment: false } },
+                { $group: {
+                    _id         : null,
+                    tongThu     : { $sum: { $cond: [{ $in: ['$type', ['income','debt_take','debt_collect']] }, '$amount', 0] } },
+                    tongChi     : { $sum: { $cond: [{ $in: ['$type', ['expense','debt_give','debt_pay','saving']] }, '$amount', 0] } },
+                    tietKiem    : { $sum: { $cond: [{ $eq: ['$type', 'saving'] }, '$amount', 0] } },
+                }},
+            ]);
+
+            return {
+                thang   : ky.month,
+                nam     : ky.year,
+                soDauKy : ky.opening_balance,
+                tongThu : tongHop[0]?.tongThu  || 0,
+                tongChi : tongHop[0]?.tongChi  || 0,
+                tietKiem: tongHop[0]?.tietKiem || 0,
+            };
+        }));
+
+        return ketQua;
     },
 
-    /*
-    !=======================================================================================
-     ? Lấy danh sách các năm đã có dữ liệu — dùng cho dropdown chọn năm
-    !=======================================================================================
-    */
     layDanhSachNam: async () => {
-        const [danhSach] = await pool.query(
-            `SELECT DISTINCT year AS nam
-             FROM monthly_periods
-             ORDER BY year DESC`
-        );
-        return danhSach.map(d => d.nam);
+        const { KyThang } = require('./period.model');
+        const cacNam = await KyThang.distinct('year');
+        return cacNam.sort((a, b) => b - a);
     },
-
 };
 
-/*
-!======================================================================================================================================
-*/
-
-module.exports = BaoCaoModel;
+module.exports = { BaoCaoModel };

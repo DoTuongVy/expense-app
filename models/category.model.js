@@ -2,11 +2,27 @@
 
 /*
 !=======================================================================================
- ! MODELS/CATEGORY.MODEL.JS — Query bảng categories
+ ! MODELS/CATEGORY.MODEL.JS — Schema danh mục (Mongoose)
 !=======================================================================================
 */
 
-const { pool } = require('../config/database');
+const mongoose = require('mongoose');
+
+/*
+!=======================================================================================
+ ! Schema
+!=======================================================================================
+*/
+
+const SchemaDanhMuc = new mongoose.Schema({
+    name      : { type: String, required: true },
+    type      : { type: String, enum: ['income','expense','saving','debt'], required: true },
+    icon      : { type: String, default: '📁' },
+    color     : { type: String, default: '#888888' },
+    is_active : { type: Boolean, default: true },
+}, { timestamps: true });
+
+const DanhMuc = mongoose.model('Category', SchemaDanhMuc);
 
 /*
 !======================================================================================================================================
@@ -14,78 +30,25 @@ const { pool } = require('../config/database');
 
 const DanhMucModel = {
 
-    /*
-    !=======================================================================================
-     ? Lấy tất cả danh mục — có thể lọc theo nhóm (income/expense/saving/debt)
-    !=======================================================================================
-    */
     layTatCa: async (nhom = null) => {
-        let cauQuery = `SELECT * FROM categories WHERE is_active = 1`;
-        const thamSo = [];
-
-        if (nhom) {
-            cauQuery += ` AND type = ?`;
-            thamSo.push(nhom);
-        }
-
-        cauQuery += ` ORDER BY type, name`;
-        const [danhSach] = await pool.query(cauQuery, thamSo);
-        return danhSach;
+        const boLoc = { is_active: true };
+        if (nhom) boLoc.type = nhom;
+        return DanhMuc.find(boLoc).sort({ type: 1, name: 1 });
     },
 
-    /*
-    !=======================================================================================
-     ? Lấy theo ID
-    !=======================================================================================
-    */
-    layTheoId: async (id) => {
-        const [danhSach] = await pool.query(
-            `SELECT * FROM categories WHERE id = ?`, [id]
-        );
-        return danhSach[0] || null;
-    },
+    layTheoId: async (id) => DanhMuc.findById(id),
 
-    /*
-    !=======================================================================================
-     ! Thêm danh mục mới
-    !=======================================================================================
-    */
     them: async ({ tenDanhMuc, nhom, icon, mau }) => {
-        const [ketQua] = await pool.query(
-            `INSERT INTO categories (name, type, icon, color)
-             VALUES (?, ?, ?, ?)`,
-            [tenDanhMuc, nhom, icon || null, mau || '#888888']
-        );
-        return ketQua.insertId;
+        const dm = new DanhMuc({ name: tenDanhMuc, type: nhom, icon, color: mau });
+        return dm.save();
     },
 
-    /*
-    !=======================================================================================
-     ? Sửa danh mục
-    !=======================================================================================
-    */
     sua: async (id, { tenDanhMuc, icon, mau }) => {
-        await pool.query(
-            `UPDATE categories SET name = ?, icon = ?, color = ? WHERE id = ?`,
-            [tenDanhMuc, icon || null, mau || '#888888', id]
-        );
+        return DanhMuc.findByIdAndUpdate(id, { name: tenDanhMuc, icon, color: mau });
     },
 
-    /*
-    !=======================================================================================
-     ! Ẩn danh mục thay vì xoá cứng — tránh mất dữ liệu lịch sử
-    !=======================================================================================
-    */
-    an: async (id) => {
-        await pool.query(
-            `UPDATE categories SET is_active = 0 WHERE id = ?`, [id]
-        );
-    },
-
+    // ! Ẩn thay vì xoá cứng
+    an: async (id) => DanhMuc.findByIdAndUpdate(id, { is_active: false }),
 };
 
-/*
-!======================================================================================================================================
-*/
-
-module.exports = DanhMucModel;
+module.exports = { DanhMucModel, DanhMuc };

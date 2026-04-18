@@ -1,0 +1,18 @@
+# !=======================================================================================
+# ! RENDER.YAML — Cấu hình deploy lên Render.com
+# ! Commit file này lên GitHub, Render sẽ tự đọc
+# !=======================================================================================
+
+services:
+  - type: web
+    name: expense-app
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false          # ? Điền tay trên Render dashboard
+      - key: PORT
+        value: 3000
