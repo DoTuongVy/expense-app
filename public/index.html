@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi Tiêu Cá Nhân</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!--
+!=======================================================================================
+ ! SIDEBAR
+!=======================================================================================
+-->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">₫</div>
+    <div>
+      <div class="logo-title">Chi Tiêu</div>
+      <div class="logo-sub">Cá Nhân</div>
+    </div>
+  </div>
+
+  <!-- ? Badge tháng hiện tại -->
+  <div class="month-badge" id="month-badge">
+    <span class="badge-dot"></span>
+    <span id="badge-text">Tháng -- / ----</span>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-group-label">Chính</div>
+    <a class="nav-item active" data-page="dashboard">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 1116 0A8 8 0 012 10zm8-5a1 1 0 00-1 1v3.586L7.707 11.88a1 1 0 001.414 1.414L11 11.414V6a1 1 0 00-1-1z"/></svg>
+      Tổng quan
+    </a>
+    <a class="nav-item" data-page="nhap">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/></svg>
+      Nhập dữ liệu
+    </a>
+    <a class="nav-item" data-page="danh-muc">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+      Danh mục
+    </a>
+    <a class="nav-item" data-page="muc-tieu">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+      Mục tiêu
+    </a>
+
+    <div class="nav-group-label">Báo cáo</div>
+    <a class="nav-item" data-page="bao-cao-thang">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+      Báo cáo tháng
+    </a>
+    <a class="nav-item" data-page="bao-cao-nam">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      Báo cáo năm
+    </a>
+
+    <div class="nav-group-label">Khác</div>
+    <a class="nav-item" data-page="no">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/></svg>
+      Theo dõi nợ
+    </a>
+  </nav>
+
+  <!-- ? Số dư nhanh -->
+  <div class="sidebar-balance">
+    <div class="sb-label">Số dư hiện tại</div>
+    <div class="sb-value" id="sidebar-sodu">--</div>
+  </div>
+</aside>
+
+<!--
+!=======================================================================================
+ ! MAIN
+!=======================================================================================
+-->
+<main class="main">
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="menu-btn" id="menu-btn">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-title" id="topbar-title">Tổng quan</div>
+    <div class="topbar-right">
+      <!-- ? Chọn tháng -->
+      <div class="month-nav">
+        <button class="mn-btn" id="btn-prev">‹</button>
+        <span class="mn-text" id="mn-text">Tháng 4 / 2026</span>
+        <button class="mn-btn" id="btn-next">›</button>
+      </div>
+      <button class="btn-add" id="btn-them-gd">+ Thêm</button>
+    </div>
+  </header>
+
+  <!-- Nội dung trang — render bằng JS -->
+  <div class="content" id="content"></div>
+</main>
+
+<!--
+!=======================================================================================
+ ! MODAL — Thêm / Sửa giao dịch
+!=======================================================================================
+-->
+<div class="modal-overlay" id="modal-gd">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="modal-gd-title">Thêm giao dịch</span>
+      <button class="modal-close" id="modal-gd-close">✕</button>
+    </div>
+
+    <!-- Tab loại -->
+    <div class="type-tabs" id="type-tabs">
+      <button class="ttab active" data-loai="income">💰 Thu</button>
+      <button class="ttab" data-loai="expense">💸 Chi</button>
+      <button class="ttab" data-loai="saving">🏦 Tiết kiệm</button>
+      <button class="ttab" data-loai="debt_give">🤝 Nợ</button>
+    </div>
+
+    <div class="form-body">
+      <div class="fg">
+        <label class="fl">Số tiền</label>
+        <input class="fi fi-money" id="fi-sotien" type="text" placeholder="0 đ" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label class="fl">Danh mục</label>
+        <select class="fi" id="fi-danhmuc"></select>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Ngày</label>
+          <input class="fi" id="fi-ngay" type="date">
+        </div>
+        <div class="fg">
+          <label class="fl">Ghi chú</label>
+          <input class="fi" id="fi-ghichu" type="text" placeholder="(tuỳ chọn)">
+        </div>
+      </div>
+      <button class="btn-submit" id="btn-luu-gd">Lưu giao dịch</button>
+    </div>
+
+    <input type="hidden" id="fi-id-edit">
+  </div>
+</div>
+
+<!--
+!=======================================================================================
+ ! TOAST thông báo
+!=======================================================================================
+-->
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/nhap.js"></script>
+<script src="js/pages/danh-muc.js"></script>
+<script src="js/pages/muc-tieu.js"></script>
+<script src="js/pages/bao-cao-thang.js"></script>
+<script src="js/pages/bao-cao-nam.js"></script>
+<script src="js/pages/no.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
