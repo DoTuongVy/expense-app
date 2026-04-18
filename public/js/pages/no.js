@@ -2,7 +2,7 @@
 
 /*
 !=======================================================================================
- ! JS/PAGES/NO.JS — Trang theo dõi nợ
+ ! JS/PAGES/NO.JS
 !=======================================================================================
 */
 
@@ -15,7 +15,6 @@ const trangNo = {
         try {
             const ketQua    = await ApiNo.layTatCa();
             const danhSach  = ketQua.duLieu || [];
-
             const toiNo     = danhSach.filter(n => n.direction === 'i_owe');
             const hoNo      = danhSach.filter(n => n.direction === 'they_owe');
 
@@ -23,10 +22,6 @@ const trangNo = {
                 <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
                     <button class="btn-add" onclick="trangNo.moModalThem()">+ Thêm khoản nợ</button>
                 </div>
-
-                <!--
-                 ! Tôi nợ người khác
-                -->
                 <div class="card" style="margin-bottom:14px">
                     <div class="card-hd">
                         <span class="card-title">Tôi nợ người khác</span>
@@ -37,10 +32,6 @@ const trangNo = {
                         : `<div class="no-grid">${toiNo.map(n => trangNo._renderItem(n)).join('')}</div>`
                     }
                 </div>
-
-                <!--
-                 ? Người khác nợ tôi
-                -->
                 <div class="card">
                     <div class="card-hd">
                         <span class="card-title">Người khác nợ tôi</span>
@@ -52,16 +43,18 @@ const trangNo = {
                     }
                 </div>
             `;
+
+            trangNo._dangKySuKien();
+
         } catch (loi) {
             content.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>${loi.message}</div></div>`;
         }
     },
 
     _renderItem: (n) => {
-        const conLai    = Number(n.conLai || 0);
+        const noId      = n._id || n.id;
         const phanTram  = n.original_amount > 0
-            ? Math.min((n.paid_amount / n.original_amount) * 100, 100)
-            : 0;
+            ? Math.min((n.paid_amount / n.original_amount) * 100, 100) : 0;
 
         return `
         <div class="no-item">
@@ -74,51 +67,76 @@ const trangNo = {
                 <span class="no-orig">${dinhDangTien(n.original_amount)}</span>
                 <span class="no-paid">Đã ${n.direction === 'i_owe' ? 'trả' : 'thu'}: ${dinhDangTien(n.paid_amount)}</span>
             </div>
-            <div class="no-bar">
-                <div class="no-bar-fill" style="width:${phanTram}%"></div>
-            </div>
+            <div class="no-bar"><div class="no-bar-fill" style="width:${phanTram}%"></div></div>
             ${n.note ? `<div class="no-note">${n.note}</div>` : ''}
             ${n.due_date ? `<div class="no-note">Hạn: ${dinhDangNgay(n.due_date)}</div>` : ''}
             ${n.status === 'active' ? `
             <div style="display:flex;gap:6px;margin-top:4px">
-                <button class="btn-secondary" style="flex:1" onclick="trangNo.capNhatDaTra(${n.id})">
+                <button class="btn-secondary" style="flex:1;font-size:12px"
+                    onclick="trangNo.moModalTraNo('${noId}', '${n.person_name}', '${n.direction}')">
                     + Cập nhật đã ${n.direction === 'i_owe' ? 'trả' : 'thu'}
                 </button>
-                <button class="btn-danger" onclick="trangNo.xoa(${n.id})">Xoá</button>
+                <button class="btn-danger" onclick="trangNo.xoa('${noId}', '${n.person_name}')">Xoá</button>
             </div>` : ''}
         </div>`;
     },
 
-    moModalThem: () => {
-        const chieuNo   = prompt('Chiều nợ:\n1 = Tôi nợ người khác\n2 = Người khác nợ tôi\n(Nhập 1 hoặc 2):');
-        const direction = chieuNo === '1' ? 'i_owe' : 'they_owe';
-        const tenNguoi  = prompt('Tên người:');
-        if (!tenNguoi) return;
-        const soTienGoc = prompt('Số tiền:');
-        if (!soTienGoc) return;
-        const ghiChu    = prompt('Ghi chú (bấm Enter để bỏ qua):', '');
-
-        ApiNo.them({ chieuNo: direction, tenNguoi, soTienGoc: parseInt(soTienGoc), ghiChu })
-            .then(() => { hienToast('Đã thêm khoản nợ', 'ok'); trangNo.render(); })
-            .catch(loi => hienToast(loi.message, 'err'));
+    _dangKySuKien: () => {
+        const btnLuuNo = document.getElementById('btn-luu-no');
+        if (btnLuuNo) {
+            const btnMoi = btnLuuNo.cloneNode(true);
+            btnLuuNo.replaceWith(btnMoi);
+            btnMoi.addEventListener('click', trangNo._luuNo);
+        }
+        const btnTraNo = document.getElementById('btn-luu-tra-no');
+        if (btnTraNo) {
+            const btnMoi = btnTraNo.cloneNode(true);
+            btnTraNo.replaceWith(btnMoi);
+            btnMoi.addEventListener('click', trangNo._luuTraNo);
+        }
     },
 
-    capNhatDaTra: async (id) => {
-        const soTien = prompt('Số tiền đã trả/thu thêm:');
-        if (!soTien) return;
+    moModalThem    : ()                        => UI.moModalNo(),
+    moModalTraNo   : (id, tenNguoi, chieuNo)   => UI.moModalTraNo(id, tenNguoi, chieuNo),
+
+    _luuNo: async () => {
+        const chieuNo   = document.getElementById('fi-no-chieu').value;
+        const tenNguoi  = document.getElementById('fi-no-ten').value.trim();
+        const soTienGoc = parseTien(document.getElementById('fi-no-sotien').value);
+        const hanTra    = document.getElementById('fi-no-han').value;
+        const ghiChu    = document.getElementById('fi-no-ghichu').value;
+
+        if (!tenNguoi)  { hienToast('Nhập tên người!', 'err'); return; }
+        if (!soTienGoc) { hienToast('Nhập số tiền!', 'err');   return; }
+
         try {
-            await ApiNo.capNhatDaTra(id, { soTienThemVao: parseInt(soTien) });
+            await ApiNo.them({ chieuNo, tenNguoi, soTienGoc, hanTra, ghiChu });
+            hienToast('Đã thêm khoản nợ', 'ok');
+            UI.dongModal('modal-no');
+            trangNo.render();
+        } catch (loi) { hienToast(loi.message, 'err'); }
+    },
+
+    _luuTraNo: async () => {
+        const id     = document.getElementById('fi-tra-no-id').value;
+        const soTien = parseTien(document.getElementById('fi-tra-sotien').value);
+        if (!soTien) { hienToast('Nhập số tiền!', 'err'); return; }
+
+        try {
+            await ApiNo.capNhatDaTra(id, { soTienThemVao: soTien });
             hienToast('Đã cập nhật', 'ok');
+            UI.dongModal('modal-tra-no');
             trangNo.render();
         } catch (loi) { hienToast(loi.message, 'err'); }
     },
 
-    xoa: async (id) => {
-        if (!confirm('Xoá khoản nợ này?')) return;
-        try {
-            await ApiNo.xoa(id);
-            hienToast('Đã xoá', 'ok');
-            trangNo.render();
-        } catch (loi) { hienToast(loi.message, 'err'); }
+    xoa: (id, ten) => {
+        UI.xacNhan(`Xoá khoản nợ của "${ten}"?`, async () => {
+            try {
+                await ApiNo.xoa(id);
+                hienToast('Đã xoá', 'ok');
+                trangNo.render();
+            } catch (loi) { hienToast(loi.message, 'err'); }
+        });
     },
 };

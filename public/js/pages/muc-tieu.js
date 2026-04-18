@@ -8,32 +8,31 @@
 
 const trangMucTieu = {
 
+    _thang: null,
+    _nam  : null,
+
     render: async (thang, nam) => {
+        trangMucTieu._thang = thang;
+        trangMucTieu._nam   = nam;
+
         const content = document.getElementById('content');
         content.innerHTML = htmlLoading();
 
         try {
-            const [ketQuaMT, ketQuaDM] = await Promise.all([
-                ApiMucTieu.layTheoThang(thang, nam),
-                ApiDanhMuc.layTatCa(),
-            ]);
-
+            const ketQuaMT  = await ApiMucTieu.layTheoThang(thang, nam);
             const dsMucTieu = ketQuaMT.duLieu || [];
-            const dsDanhMuc = ketQuaDM.duLieu || [];
 
             content.innerHTML = `
                 <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-                    <button class="btn-add" onclick="trangMucTieu.moModalThem(${thang},${nam})">+ Đặt mục tiêu</button>
+                    <button class="btn-add" onclick="trangMucTieu.moModalThem()">+ Đặt mục tiêu</button>
                 </div>
-
                 <div class="card">
                     <div class="card-hd">
                         <span class="card-title">Mục tiêu tháng ${thang}/${nam}</span>
                         <span class="badge blue">${dsMucTieu.length} mục tiêu</span>
                     </div>
-
                     ${!dsMucTieu.length
-                        ? htmlEmpty('🎯', 'Chưa có mục tiêu nào — bấm "+ Đặt mục tiêu" để bắt đầu')
+                        ? htmlEmpty('🎯', 'Chưa có mục tiêu — bấm "+ Đặt mục tiêu" để bắt đầu')
                         : `<table class="bc-table">
                             <thead>
                                 <tr>
@@ -48,7 +47,8 @@ const trangMucTieu = {
                             <tbody>
                                 ${dsMucTieu.map(mt => {
                                     const { phanTram, mau } = tinhPhanTramGoal(mt.soTienThucTe, mt.soTienMucTieu);
-                                    const cl = mt.soTienMucTieu - mt.soTienThucTe;
+                                    const cl    = mt.soTienMucTieu - mt.soTienThucTe;
+                                    const mtId  = mt.id || mt._id;
                                     return `<tr>
                                         <td>${mt.iconDanhMuc || ''} ${mt.tenDanhMuc}</td>
                                         <td class="num">${dinhDangTien(mt.soTienMucTieu)}</td>
@@ -58,7 +58,7 @@ const trangMucTieu = {
                                             <span style="color:var(--${mau === 'ok' ? 'green' : mau === 'warn' ? 'amber' : 'red'})">${Math.round(phanTram)}%</span>
                                         </td>
                                         <td>
-                                            <button class="btn-icon del" onclick="trangMucTieu.xoa(${mt.id})">🗑️</button>
+                                            <button class="btn-icon del" onclick="trangMucTieu.xoa('${mtId}', '${mt.tenDanhMuc}')">🗑️</button>
                                         </td>
                                     </tr>`;
                                 }).join('')}
@@ -67,31 +67,50 @@ const trangMucTieu = {
                     }
                 </div>
             `;
+
+            trangMucTieu._dangKySuKien();
+
         } catch (loi) {
             content.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div>${loi.message}</div></div>`;
         }
     },
 
-    moModalThem: async (thang, nam) => {
-        const ketQuaDM  = await ApiDanhMuc.layTatCa();
-        const dsDanhMuc = ketQuaDM.duLieu || [];
-        const dsDM      = dsDanhMuc.map(dm => `${dm.id}: ${dm.icon || ''} ${dm.name}`).join('\n');
-        const danhMucId = prompt(`Chọn danh mục (nhập ID):\n${dsDM}`);
-        if (!danhMucId) return;
-        const soTien    = prompt('Số tiền mục tiêu (VD: 3000000):');
-        if (!soTien)    return;
-
-        ApiMucTieu.datMucTieu({ thang, nam, danhMucId: parseInt(danhMucId), soTienMucTieu: parseInt(soTien) })
-            .then(() => { hienToast('Đã lưu mục tiêu', 'ok'); trangMucTieu.render(thang, nam); })
-            .catch(loi => hienToast(loi.message, 'err'));
+    _dangKySuKien: () => {
+        const btnLuu = document.getElementById('btn-luu-muctieu');
+        if (!btnLuu) return;
+        const btnMoi = btnLuu.cloneNode(true);
+        btnLuu.replaceWith(btnMoi);
+        btnMoi.addEventListener('click', trangMucTieu._luuMucTieu);
     },
 
-    xoa: async (id) => {
-        if (!confirm('Xoá mục tiêu này?')) return;
+    moModalThem: async () => await UI.moModalMucTieu(),
+
+    _luuMucTieu: async () => {
+        const danhMucId     = document.getElementById('fi-mt-danhmuc').value;
+        const soTienMucTieu = parseTien(document.getElementById('fi-mt-sotien').value);
+
+        if (!soTienMucTieu || soTienMucTieu <= 0) { hienToast('Nhập số tiền mục tiêu!', 'err'); return; }
+
         try {
-            await ApiMucTieu.xoa(id);
-            hienToast('Đã xoá mục tiêu', 'ok');
-            App.taiLaiTrang();
+            await ApiMucTieu.datMucTieu({
+                thang       : trangMucTieu._thang,
+                nam         : trangMucTieu._nam,
+                danhMucId,
+                soTienMucTieu,
+            });
+            hienToast('Đã lưu mục tiêu', 'ok');
+            UI.dongModal('modal-muctieu');
+            trangMucTieu.render(trangMucTieu._thang, trangMucTieu._nam);
         } catch (loi) { hienToast(loi.message, 'err'); }
+    },
+
+    xoa: (id, ten) => {
+        UI.xacNhan(`Xoá mục tiêu "${ten}"?`, async () => {
+            try {
+                await ApiMucTieu.xoa(id);
+                hienToast('Đã xoá mục tiêu', 'ok');
+                trangMucTieu.render(trangMucTieu._thang, trangMucTieu._nam);
+            } catch (loi) { hienToast(loi.message, 'err'); }
+        }, '🎯');
     },
 };

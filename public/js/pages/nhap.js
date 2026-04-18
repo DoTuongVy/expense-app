@@ -2,13 +2,11 @@
 
 /*
 !=======================================================================================
- ! JS/PAGES/NHAP.JS — Trang nhập dữ liệu hàng ngày
+ ! JS/PAGES/NHAP.JS
 !=======================================================================================
 */
 
 const trangNhap = {
-
-    _ngayDangChon: homNayISO(),
 
     render: async (thang, nam) => {
         const content = document.getElementById('content');
@@ -18,8 +16,7 @@ const trangNhap = {
             const ketQua    = await ApiGiaoDich.layDanhSach(thang, nam);
             const danhSach  = ketQua.duLieu || [];
 
-            // ? Nhóm giao dịch theo ngày
-            const theoNgay  = {};
+            const theoNgay = {};
             danhSach.forEach(gd => {
                 const ngay = gd.trans_date?.split('T')[0] || gd.trans_date;
                 if (!theoNgay[ngay]) theoNgay[ngay] = [];
@@ -30,7 +27,6 @@ const trangNhap = {
 
             content.innerHTML = `
                 <div class="nhap-grid">
-                    <!-- ? Cột trái: danh sách theo ngày -->
                     <div>
                         <div class="date-tabs" id="date-tabs">
                             <button class="date-tab active" data-ngay="all">Tất cả</button>
@@ -40,8 +36,6 @@ const trangNhap = {
                         </div>
                         <div id="ds-nhap-ngay"></div>
                     </div>
-
-                    <!-- ? Cột phải: tóm tắt ngày -->
                     <div class="card" style="align-self:start">
                         <div class="card-hd">
                             <span class="card-title">Tóm tắt tháng ${thang}</span>
@@ -51,22 +45,16 @@ const trangNhap = {
                 </div>
             `;
 
-            // ? Render danh sách mặc định: tất cả
             trangNhap._renderDanhSach(danhSach, 'all');
             trangNhap._renderTomTat(danhSach);
 
-            // ? Xử lý click tab ngày
             document.getElementById('date-tabs').addEventListener('click', (e) => {
                 const btn = e.target.closest('.date-tab');
                 if (!btn) return;
                 document.querySelectorAll('.date-tab').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const ngay = btn.dataset.ngay;
-                if (ngay === 'all') {
-                    trangNhap._renderDanhSach(danhSach, 'all');
-                } else {
-                    trangNhap._renderDanhSach(theoNgay[ngay] || [], ngay);
-                }
+                trangNhap._renderDanhSach(ngay === 'all' ? danhSach : (theoNgay[ngay] || []), ngay);
             });
 
         } catch (loi) {
@@ -86,8 +74,10 @@ const trangNhap = {
         container.innerHTML = `<div class="trans-list">
             ${danhSach.map(gd => {
                 const info = loaiGiaoDich(gd.type);
+                // ! Dùng _id từ MongoDB
+                const gdId = gd.id || gd._id;
                 return `
-                <div class="trans-item" data-id="${gd.id}">
+                <div class="trans-item">
                     <div class="trans-ico ${info.nhom}">${gd.iconDanhMuc || '💰'}</div>
                     <div class="trans-info">
                         <div class="trans-name">${gd.tenDanhMuc}${gd.note ? ` — <span style="color:var(--text3);font-weight:400">${gd.note}</span>` : ''}</div>
@@ -95,8 +85,8 @@ const trangNhap = {
                     </div>
                     <div class="trans-amount ${info.nhom}">${info.ky}${dinhDangTien(gd.amount)}</div>
                     <div class="trans-actions">
-                        <button class="btn-icon edit" onclick="App.moModalSua(${gd.id})">✏️</button>
-                        <button class="btn-icon del"  onclick="trangNhap.xoaGiaoDich(${gd.id})">🗑️</button>
+                        <button class="btn-icon edit" onclick="App.moModalSua('${gdId}')">✏️</button>
+                        <button class="btn-icon del"  onclick="trangNhap.xoaGiaoDich('${gdId}')">🗑️</button>
                     </div>
                 </div>`;
             }).join('')}
@@ -107,10 +97,12 @@ const trangNhap = {
         const container = document.getElementById('tom-tat-nhap');
         if (!container) return;
 
-        const tongThu = danhSach.filter(gd => ['income','debt_take','debt_collect'].includes(gd.type))
-                                .reduce((s, gd) => s + Number(gd.amount), 0);
-        const tongChi = danhSach.filter(gd => ['expense','debt_give','debt_pay','saving'].includes(gd.type))
-                                .reduce((s, gd) => s + Number(gd.amount), 0);
+        const tongThu = danhSach
+            .filter(gd => ['income','debt_take','debt_collect'].includes(gd.type))
+            .reduce((s, gd) => s + Number(gd.amount), 0);
+        const tongChi = danhSach
+            .filter(gd => ['expense','debt_give','debt_pay','saving'].includes(gd.type))
+            .reduce((s, gd) => s + Number(gd.amount), 0);
 
         container.innerHTML = `
             <div class="sodu-row">
@@ -133,17 +125,18 @@ const trangNhap = {
 
     /*
     !=======================================================================================
-     ! Xoá giao dịch
+     ! Xoá giao dịch — dùng modal xác nhận thay confirm()
     !=======================================================================================
     */
-    xoaGiaoDich: async (id) => {
-        if (!confirm('Xoá giao dịch này?')) return;
-        try {
-            await ApiGiaoDich.xoa(id);
-            hienToast('Đã xoá giao dịch', 'ok');
-            App.taiLaiTrang();
-        } catch (loi) {
-            hienToast(loi.message, 'err');
-        }
+    xoaGiaoDich: (id) => {
+        UI.xacNhan('Xoá giao dịch này?', async () => {
+            try {
+                await ApiGiaoDich.xoa(id);
+                hienToast('Đã xoá giao dịch', 'ok');
+                App.taiLaiTrang();
+            } catch (loi) {
+                hienToast(loi.message, 'err');
+            }
+        });
     },
 };
