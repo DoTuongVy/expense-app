@@ -1183,3 +1183,7 @@ select.fi option { background: #ffffff; color: var(--text); }
   .bc-grid   { grid-template-columns: 1fr; }
   .content   { padding: 14px 14px 40px; }
 }
+
+@media (hover: none) {
+  .trans-actions { opacity: 1; }
+}
