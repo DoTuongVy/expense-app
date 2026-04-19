@@ -108,9 +108,15 @@
     </div>
     <div class="form-body">
       <div class="fg">
-        <label class="fl">Số tiền</label>
-        <input class="fi fi-money" id="fi-sotien" type="text" placeholder="0 đ" autocomplete="off">
-      </div>
+    <label class="fl">Số tiền</label>
+    <input class="fi fi-money" id="fi-sotien" type="text" placeholder="0 đ" autocomplete="off">
+    <div class="zero-btns">
+        <button type="button" onclick="themSoZero(1)">×10</button>
+        <button type="button" onclick="themSoZero(2)">×100</button>
+        <button type="button" onclick="themSoZero(3)">×1.000</button>
+        <button type="button" onclick="themSoZero(4)">×10.000</button>
+    </div>
+</div>
       <div class="fg">
         <label class="fl">Danh mục</label>
         <select class="fi" id="fi-danhmuc"></select>
@@ -125,6 +131,10 @@
           <input class="fi" id="fi-ghichu" type="text" placeholder="(tuỳ chọn)">
         </div>
       </div>
+      <div class="fg">
+    <label class="fl">Ghi chú chi tiết</label>
+    <textarea class="fi" id="fi-ghichu2" rows="3" placeholder="Ghi chú dài hơn (tuỳ chọn)..." style="resize:vertical"></textarea>
+</div>
       <button class="btn-submit" id="btn-luu-gd">Lưu giao dịch</button>
     </div>
     <input type="hidden" id="fi-id-edit">
@@ -154,7 +164,7 @@
 !=======================================================================================
 -->
 <div class="modal-overlay" id="modal-danhmuc">
-  <div class="modal" style="max-width:380px">
+  <div class="modal" style="max-width:420px">
     <div class="modal-hd">
       <span class="modal-title">Thêm danh mục</span>
       <button class="modal-close" onclick="UI.dongModal('modal-danhmuc')">✕</button>
@@ -173,16 +183,28 @@
           <option value="debt">🤝 Nợ</option>
         </select>
       </div>
-      <div class="form-row">
-        <div class="fg">
-          <label class="fl">Icon (emoji)</label>
-          <input class="fi" id="fi-dm-icon" type="text" placeholder="📁" maxlength="4">
+
+      <!-- ? Icon picker -->
+      <div class="fg">
+        <label class="fl">Icon</label>
+        <div class="icon-picker-hd">
+          <span class="icon-preview" id="icon-preview">📁</span>
+          <span style="font-size:12px;color:var(--text3)">Chọn icon bên dưới</span>
+          <input type="hidden" id="fi-dm-icon-val" value="📁">
         </div>
-        <div class="fg">
-          <label class="fl">Màu</label>
-          <input class="fi" id="fi-dm-mau" type="color" value="#3b82f6" style="height:40px;padding:4px">
+        <div class="icon-grid" id="icon-grid"></div>
+      </div>
+
+      <!-- ? Màu -->
+      <div class="fg">
+        <label class="fl">Màu</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input class="fi" id="fi-dm-mau" type="color" value="#3b82f6"
+            style="height:40px;padding:4px;width:60px;cursor:pointer">
+          <span style="font-size:12px;color:var(--text3)">Màu hiển thị trên UI</span>
         </div>
       </div>
+
       <button class="btn-submit" id="btn-luu-danhmuc">Lưu danh mục</button>
     </div>
   </div>
@@ -250,6 +272,10 @@
           <input class="fi" id="fi-no-ghichu" type="text" placeholder="(tuỳ chọn)">
         </div>
       </div>
+      <div class="fg">
+    <label class="fl">Ghi chú chi tiết</label>
+    <textarea class="fi" id="fi-ghichu2" rows="3" placeholder="Ghi chú dài hơn (tuỳ chọn)..." style="resize:vertical"></textarea>
+</div>
       <button class="btn-submit" id="btn-luu-no">Lưu khoản nợ</button>
     </div>
   </div>

@@ -26,12 +26,22 @@ const trangDanhMuc = {
             });
 
             content.innerHTML = `
-                <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-                    <button class="btn-add" onclick="trangDanhMuc.moModalThem()">+ Thêm danh mục</button>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                    <button class="btn-danger" id="btn-xoa-nhieu-dm" style="display:none;padding:6px 12px;font-size:12px"
+                        onclick="trangDanhMuc.anNhieu()">
+                        🗑️ Ẩn đã chọn
+                    </button>
+                    <button class="btn-add" style="margin-left:auto" onclick="trangDanhMuc.moModalThem()">+ Thêm danh mục</button>
                 </div>
+
                 ${Object.entries(nhomLabel).map(([type, nhan]) => `
                     <div class="card" style="margin-bottom:14px">
                         <div class="card-hd">
+                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)">
+                                <input type="checkbox" class="chk-nhom" data-nhom="${type}"
+                                    onchange="trangDanhMuc.chonNhom('${type}', this.checked)">
+                                Chọn tất cả
+                            </label>
                             <span class="card-title">${nhan}</span>
                             <span class="badge ${nhomMau[type]}">${(theoNhom[type] || []).length} danh mục</span>
                         </div>
@@ -40,11 +50,15 @@ const trangDanhMuc = {
                                 const dmId = dm._id || dm.id;
                                 return `
                                 <div class="dm-item">
+                                    <input type="checkbox" class="chk-dm" value="${dmId}"
+                                        onchange="trangDanhMuc.capNhatNutXoa()"
+                                        style="width:15px;height:15px;cursor:pointer;flex-shrink:0">
                                     <div class="dm-ico" style="background:${dm.color}22">${dm.icon || '📁'}</div>
                                     <div class="dm-name">${dm.name}</div>
                                     <span class="dm-type ${dm.type}">${nhan}</span>
                                     <div class="trans-actions" style="opacity:1">
-                                        <button class="btn-icon del" onclick="trangDanhMuc.anDanhMuc('${dmId}', '${dm.name}')">🗑️</button>
+                                        <button class="btn-icon del"
+                                            onclick="trangDanhMuc.anDanhMuc('${dmId}', '${dm.name}')">🗑️</button>
                                     </div>
                                 </div>`;
                             }).join('')}
@@ -71,12 +85,41 @@ const trangDanhMuc = {
         btnMoi.addEventListener('click', trangDanhMuc._luuDanhMuc);
     },
 
+    /*
+    !=======================================================================================
+     ? Chọn tất cả trong 1 nhóm
+    !=======================================================================================
+    */
+    chonNhom: (type, checked) => {
+        // ? Lấy tất cả checkbox trong card của nhóm đó
+        document.querySelectorAll(`.chk-nhom[data-nhom="${type}"]`)
+            .forEach(chkNhom => {
+                // ? Tìm card cha rồi chọn tất cả chk-dm bên trong
+                const card = chkNhom.closest('.card');
+                card?.querySelectorAll('.chk-dm').forEach(chk => chk.checked = checked);
+            });
+        trangDanhMuc.capNhatNutXoa();
+    },
+
+    /*
+    !=======================================================================================
+     ? Cập nhật nút xoá nhiều
+    !=======================================================================================
+    */
+    capNhatNutXoa: () => {
+        const soChon = document.querySelectorAll('.chk-dm:checked').length;
+        const btn    = document.getElementById('btn-xoa-nhieu-dm');
+        if (!btn) return;
+        btn.style.display = soChon > 0 ? 'block' : 'none';
+        btn.textContent   = `🗑️ Ẩn ${soChon} danh mục đã chọn`;
+    },
+
     moModalThem: () => UI.moModalDanhMuc(),
 
     _luuDanhMuc: async () => {
         const tenDanhMuc = document.getElementById('fi-dm-ten').value.trim();
         const nhom       = document.getElementById('fi-dm-nhom').value;
-        const icon       = document.getElementById('fi-dm-icon').value.trim() || '📁';
+        const icon       = document.getElementById('fi-dm-icon-val').value || '📁';
         const mau        = document.getElementById('fi-dm-mau').value;
 
         if (!tenDanhMuc) { hienToast('Nhập tên danh mục!', 'err'); return; }
@@ -89,11 +132,34 @@ const trangDanhMuc = {
         } catch (loi) { hienToast(loi.message, 'err'); }
     },
 
+    /*
+    !=======================================================================================
+     ! Ẩn 1 danh mục
+    !=======================================================================================
+    */
     anDanhMuc: (id, ten) => {
         UI.xacNhan(`Ẩn danh mục "${ten}"?`, async () => {
             try {
                 await ApiDanhMuc.an(id);
                 hienToast('Đã ẩn danh mục', 'ok');
+                trangDanhMuc.render();
+            } catch (loi) { hienToast(loi.message, 'err'); }
+        }, '🗂️');
+    },
+
+    /*
+    !=======================================================================================
+     ! Ẩn nhiều danh mục đã chọn
+    !=======================================================================================
+    */
+    anNhieu: () => {
+        const cacId = [...document.querySelectorAll('.chk-dm:checked')].map(c => c.value);
+        if (!cacId.length) return;
+
+        UI.xacNhan(`Ẩn ${cacId.length} danh mục đã chọn?`, async () => {
+            try {
+                await Promise.all(cacId.map(id => ApiDanhMuc.an(id)));
+                hienToast(`Đã ẩn ${cacId.length} danh mục`, 'ok');
                 trangDanhMuc.render();
             } catch (loi) { hienToast(loi.message, 'err'); }
         }, '🗂️');

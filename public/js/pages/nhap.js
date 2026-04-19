@@ -18,10 +18,11 @@ const trangNhap = {
 
             const theoNgay = {};
             danhSach.forEach(gd => {
-                const ngay = gd.trans_date?.split('T')[0] || gd.trans_date;
-                if (!theoNgay[ngay]) theoNgay[ngay] = [];
-                theoNgay[ngay].push(gd);
-            });
+    const d    = new Date(gd.trans_date);
+    const ngay = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+    if (!theoNgay[ngay]) theoNgay[ngay] = [];
+    theoNgay[ngay].push(gd);
+});
 
             const cacNgay = Object.keys(theoNgay).sort((a, b) => b.localeCompare(a));
 
@@ -62,37 +63,51 @@ const trangNhap = {
         }
     },
 
-    _renderDanhSach: (danhSach, ngayLoc) => {
-        const container = document.getElementById('ds-nhap-ngay');
-        if (!container) return;
+_renderDanhSach: (danhSach, ngayLoc) => {
+    const container = document.getElementById('ds-nhap-ngay');
+    if (!container) return;
 
-        if (!danhSach.length) {
-            container.innerHTML = htmlEmpty('📋', ngayLoc === 'all' ? 'Tháng này chưa có giao dịch' : 'Ngày này chưa có giao dịch');
-            return;
-        }
+    if (!danhSach.length) {
+        container.innerHTML = htmlEmpty('📋', ngayLoc === 'all' ? 'Tháng này chưa có giao dịch' : 'Ngày này chưa có giao dịch');
+        return;
+    }
 
-        container.innerHTML = `<div class="trans-list">
-            ${danhSach.map(gd => {
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text2);cursor:pointer">
+                <input type="checkbox" id="chk-chon-tat-ca" onchange="trangNhap.chonTatCa(this.checked)">
+                Chọn tất cả
+            </label>
+            <button class="btn-danger" id="btn-xoa-nhieu" style="display:none;padding:6px 12px;font-size:12px"
+                onclick="trangNhap.xoaNhieu()">
+                🗑️ Xoá đã chọn
+            </button>
+        </div>
+        <div class="trans-list">
+            ${[...danhSach]
+        .sort((a, b) => new Date(b.trans_date) - new Date(a.trans_date))
+        .map(gd => {
                 const info = loaiGiaoDich(gd.type);
-                // ! Dùng _id từ MongoDB
                 const gdId = gd.id || gd._id;
                 return `
-                <div class="trans-item">
+                <div class="trans-item" data-id="${gdId}">
+                    <input type="checkbox" class="chk-gd" value="${gdId}"
+                        onchange="trangNhap.capNhatNutXoa()"
+                        style="flex-shrink:0;width:15px;height:15px;cursor:pointer">
                     <div class="trans-ico ${info.nhom}">${gd.iconDanhMuc || '💰'}</div>
                     <div class="trans-info">
-                        <div class="trans-name">${gd.tenDanhMuc}${gd.note ? ` — <span style="color:var(--text3);font-weight:400">${gd.note}</span>` : ''}</div>
+                        <div class="trans-name">${gd.tenDanhMuc}${gd.note ? ` — <span style="color:var(--text3);font-weight:400">${gd.note}</span>` : ''}${gd.note2 ? `<div style="font-size:11.5px;color:var(--text3);font-weight:400;margin-top:2px">${gd.note2}</div>` : ''}</div>
                         <div class="trans-date">${dinhDangNgay(gd.trans_date)} · ${info.nhan}</div>
                     </div>
                     <div class="trans-amount ${info.nhom}">${info.ky}${dinhDangTien(gd.amount)}</div>
                     <div class="trans-actions">
                         <button class="btn-icon edit" onclick="App.moModalSua('${gdId}')">✏️</button>
-                        <button class="btn-icon del"  onclick="trangNhap.xoaGiaoDich('${gdId}')">🗑️</button>
+                        <button class="btn-icon del" onclick="trangNhap.xoaGiaoDich('${gdId}')">🗑️</button>
                     </div>
                 </div>`;
             }).join('')}
         </div>`;
-    },
-
+},
     _renderTomTat: (danhSach) => {
         const container = document.getElementById('tom-tat-nhap');
         if (!container) return;
@@ -139,4 +154,33 @@ const trangNhap = {
             }
         });
     },
+
+    chonTatCa: (checked) => {
+    document.querySelectorAll('.chk-gd').forEach(chk => chk.checked = checked);
+    trangNhap.capNhatNutXoa();
+},
+
+capNhatNutXoa: () => {
+    const soChon = document.querySelectorAll('.chk-gd:checked').length;
+    const btn    = document.getElementById('btn-xoa-nhieu');
+    if (!btn) return;
+    btn.style.display   = soChon > 0 ? 'block' : 'none';
+    btn.textContent     = `🗑️ Xoá ${soChon} mục đã chọn`;
+},
+
+xoaNhieu: () => {
+    const cacId = [...document.querySelectorAll('.chk-gd:checked')].map(c => c.value);
+    if (!cacId.length) return;
+
+    UI.xacNhan(`Xoá ${cacId.length} giao dịch đã chọn?`, async () => {
+        try {
+            await Promise.all(cacId.map(id => ApiGiaoDich.xoa(id)));
+            hienToast(`Đã xoá ${cacId.length} giao dịch`, 'ok');
+            App.taiLaiTrang();
+        } catch (loi) {
+            hienToast(loi.message, 'err');
+        }
+    });
+},
+
 };

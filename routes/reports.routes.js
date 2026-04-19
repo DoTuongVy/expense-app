@@ -15,4 +15,6 @@ router.get('/thang', BaoCaoController.baoCaoThang);
 // ! GET /api/bao-cao/nam?nam=2026
 router.get('/nam',   BaoCaoController.baoCaoNam);
 
+router.get('/chi-theo-ngay', BaoCaoController.chiTheoNgay);
+
 module.exports = router;

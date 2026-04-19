@@ -15,6 +15,55 @@
 !=======================================================================================
 */
 
+/*
+!=======================================================================================
+ ! Bảng icon emoji cho danh mục
+!=======================================================================================
+*/
+
+const BANG_ICON = [
+    // ? Thu nhập
+    '💰','💵','💴','💶','💷','🏦','💳','📈','🤑','💹',
+    // ? Ăn uống
+    '🍜','🍱','🍔','🍕','🍣','🥗','🍺','☕','🧋','🍰',
+    // ? Di chuyển
+    '🚗','🛵','🚌','✈️','🚂','🚢','🛺','🚲','⛽','🅿️',
+    // ? Nhà cửa
+    '🏠','💡','🔧','🛒','🛋️','🪴','🧹','🚿','📦','🔑',
+    // ? Giải trí
+    '🎮','🎬','🎵','📚','⚽','🎯','🎲','🎭','🎨','🎸',
+    // ? Sức khoẻ
+    '🏥','💊','🏃','🧘','💪','🩺','🩹','😷','🧬','🫀',
+    // ? Giáo dục
+    '📖','✏️','🎓','🏫','💻','🔬','📐','🖊️','📝','🗂️',
+    // ? Tiết kiệm
+    '🪙','💎','🏆','🎖️','📊','🗃️','🔐','🏅','⭐','🎁',
+    // ? Nợ
+    '🤝','📤','📥','🔄','💸','🧾','📋','✅','❌','⚠️',
+    // ? Khác
+    '👶','👨‍👩‍👧','🐶','🐱','🌱','🌍','⛪','❤️','😊','🎀',
+];
+
+/*
+!=======================================================================================
+ ! Helper icon picker
+!=======================================================================================
+*/
+
+const chonIcon = (icon) => {
+    document.getElementById('fi-dm-icon-val').value     = icon;
+    document.getElementById('icon-preview').textContent = icon;
+
+    // ? Highlight icon đang chọn
+    document.querySelectorAll('.icon-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim() === icon);
+    });
+};
+
+/*
+!======================================================================================================================================
+*/
+
 const UI = {
 
     /*
@@ -69,13 +118,24 @@ const UI = {
 
     /*
     !=======================================================================================
-     ! Modal thêm danh mục
+     ! Modal thêm danh mục — có icon picker
     !=======================================================================================
     */
     moModalDanhMuc: () => {
-        document.getElementById('fi-dm-ten').value  = '';
-        document.getElementById('fi-dm-icon').value = '📁';
-        document.getElementById('fi-dm-mau').value  = '#3b82f6';
+        document.getElementById('fi-dm-ten').value      = '';
+        document.getElementById('fi-dm-icon-val').value = '📁';
+        document.getElementById('fi-dm-mau').value      = '#3b82f6';
+        document.getElementById('icon-preview').textContent = '📁';
+
+        // ? Render bảng icon
+        const luoi = document.getElementById('icon-grid');
+        luoi.innerHTML = BANG_ICON.map(ic =>
+            `<button type="button" class="icon-btn" onclick="chonIcon('${ic}')">${ic}</button>`
+        ).join('');
+
+        // ? Highlight mặc định
+        chonIcon('📁');
+
         UI.moModal('modal-danhmuc');
         setTimeout(() => document.getElementById('fi-dm-ten').focus(), 100);
     },
@@ -86,9 +146,9 @@ const UI = {
     !=======================================================================================
     */
     moModalMucTieu: async () => {
-        const ketQua    = await ApiDanhMuc.layTatCa().catch(() => ({ duLieu: [] }));
-        const sel       = document.getElementById('fi-mt-danhmuc');
-        sel.innerHTML   = ketQua.duLieu.map(dm =>
+        const ketQua  = await ApiDanhMuc.layTatCa().catch(() => ({ duLieu: [] }));
+        const sel     = document.getElementById('fi-mt-danhmuc');
+        sel.innerHTML = ketQua.duLieu.map(dm =>
             `<option value="${dm._id || dm.id}">${dm.icon || ''} ${dm.name}</option>`
         ).join('');
         document.getElementById('fi-mt-sotien').value = '';

@@ -25,6 +25,7 @@ const SchemaGiaoDich = new mongoose.Schema({
     amount        : { type: Number, required: true, min: 0 },
     trans_date    : { type: Date, required: true },
     note          : { type: String, default: '' },
+    note2 : { type: String, default: '' },
     is_adjustment : { type: Boolean, default: false },
 }, { timestamps: true });
 
@@ -51,7 +52,7 @@ const GiaoDichModel = {
         return GiaoDich.findById(id).populate('category_id', 'name icon color');
     },
 
-    them: async ({ kyThangId, danhMucId, loai, soTien, ngay, ghiChu }) => {
+    them: async ({ kyThangId, danhMucId, loai, soTien, ngay, ghiChu, ghiChu2 }) => {
         const gd = new GiaoDich({
             period_id   : kyThangId,
             category_id : danhMucId,
@@ -59,17 +60,19 @@ const GiaoDichModel = {
             amount      : soTien,
             trans_date  : new Date(ngay),
             note        : ghiChu || '',
+            note2       : ghiChu2 || '',
         });
         return gd.save();
     },
 
-    sua: async (id, { danhMucId, loai, soTien, ngay, ghiChu }) => {
+    sua: async (id, { danhMucId, loai, soTien, ngay, ghiChu, ghiChu2 }) => {
         return GiaoDich.findByIdAndUpdate(id, {
             category_id : danhMucId,
             type        : loai,
             amount      : soTien,
             trans_date  : new Date(ngay),
             note        : ghiChu || '',
+            note2       : ghiChu2 || '',
         });
     },
 

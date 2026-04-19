@@ -50,6 +50,7 @@ const ApiKyThang = {
     layHienTai : ()          => goiApi('/ky-thang/hien-tai'),
     layTatCa   : ()          => goiApi('/ky-thang'),
     chotThang  : (id, body)  => goiApi(`/ky-thang/${id}/chot`, { method: 'POST', body }),
+    huyChot: (id) => goiApi(`/ky-thang/${id}/huy-chot`, { method: 'PUT' }),
 };
 
 /*
@@ -107,6 +108,7 @@ const ApiMucTieu = {
 const ApiBaoCao = {
     baoCaoThang : (thang, nam) => goiApi(`/bao-cao/thang?thang=${thang}&nam=${nam}`),
     baoCaoNam   : (nam)        => goiApi(`/bao-cao/nam?nam=${nam}`),
+    chiTheoNgay : (thang, nam) => goiApi(`/bao-cao/chi-theo-ngay?thang=${thang}&nam=${nam}`),
 };
 
 /*

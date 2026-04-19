@@ -6,8 +6,8 @@
 !=======================================================================================
 */
 
-const { KyThangModel }  = require('../models/period.model');
-const { GiaoDichModel } = require('../models/transaction.model');
+const { KyThangModel, KyThang } = require('../models/period.model');
+const { GiaoDichModel }         = require('../models/transaction.model');
 
 const KyThangController = {
 
@@ -25,7 +25,7 @@ const KyThangController = {
         } catch (loi) { next(loi); }
     },
 
-    // ! Chốt tháng — user nhập số dư thực tế
+    // ! Chốt tháng — user nhập số tiền thực tế đang có trong túi
     chotThang: async (req, res, next) => {
         try {
             const { id } = req.params;
@@ -45,6 +45,19 @@ const KyThangController = {
             res.json({ thanhCong: true, thongBao: 'Đã chốt tháng', duLieu: ketQua });
         } catch (loi) { next(loi); }
     },
+
+    // ? Huỷ chốt tháng — mở lại để chỉnh sửa
+    huyChot: async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            await KyThang.findByIdAndUpdate(id, {
+                is_closed : false,
+                closed_at : null,
+            });
+            res.json({ thanhCong: true, thongBao: 'Đã huỷ chốt tháng' });
+        } catch (loi) { next(loi); }
+    },
+
 };
 
 module.exports = KyThangController;

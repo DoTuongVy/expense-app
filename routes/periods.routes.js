@@ -16,5 +16,7 @@ router.get('/',              KyThangController.layTatCa);
 router.get('/hien-tai',      KyThangController.layHienTai);
 // ! POST /api/ky-thang/:id/chot — chốt tháng
 router.post('/:id/chot',     KyThangController.chotThang);
+// ? PUT /api/ky-thang/:id/huy-chot — huỷ chốt tháng
+router.put('/:id/huy-chot', KyThangController.huyChot);
 
 module.exports = router;

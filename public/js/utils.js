@@ -102,12 +102,43 @@ const parseTien = (chuoi) => {
 */
 
 const formatInputTien = (input) => {
-    const soThuanTuy = parseTien(input.value);
-    if (soThuanTuy > 0) {
-        input.value = soThuanTuy.toLocaleString('vi-VN') + 'đ';
-    } else {
+    // ? Lưu vị trí cursor trước khi format
+    const viTriCursor   = input.selectionStart;
+    const giaTriCu      = input.value;
+
+    // ? Chỉ lấy số thuần
+    const soThuanTuy    = giaTriCu.replace(/[^\d]/g, '');
+
+    if (!soThuanTuy) {
         input.value = '';
+        return;
     }
+
+    // ? Đếm số ký tự số trước cursor trong chuỗi cũ
+    const soKyTuSoTruocCursor = giaTriCu.slice(0, viTriCursor).replace(/[^\d]/g, '').length;
+
+    // ? Format mới
+    const soFormatted   = parseInt(soThuanTuy).toLocaleString('vi-VN');
+    input.value         = soFormatted + 'đ';
+
+    // ? Tính lại vị trí cursor trong chuỗi mới
+    let demSo = 0;
+    let viTriMoi = 0;
+    for (let i = 0; i < soFormatted.length; i++) {
+        if (/\d/.test(soFormatted[i])) {
+            demSo++;
+            if (demSo === soKyTuSoTruocCursor) {
+                viTriMoi = i + 1;
+                break;
+            }
+        }
+    }
+
+    // ! Nếu không tìm được vị trí thì đặt trước chữ đ
+    if (demSo < soKyTuSoTruocCursor) viTriMoi = soFormatted.length;
+
+    // ? Đặt lại cursor đúng chỗ
+    input.setSelectionRange(viTriMoi, viTriMoi);
 };
 
 /*
@@ -149,4 +180,21 @@ const tinhPhanTramGoal = (thucTe, mucTieu) => {
     if (pt >= 100) mau = 'over';
     else if (pt >= 80) mau = 'warn';
     return { phanTram: pt, mau };
+};
+
+
+
+/*
+!=======================================================================================
+ ! Thêm số 0 vào số tiền đang nhập
+!=======================================================================================
+*/
+
+const themSoZero = (soLuong) => {
+    const input     = document.getElementById('fi-sotien');
+    const soHienTai = parseTien(input.value);
+    if (!soHienTai) return;
+    const soMoi     = soHienTai * Math.pow(10, soLuong);
+    input.value     = soMoi.toLocaleString('vi-VN') + 'đ';
+    input.focus();
 };

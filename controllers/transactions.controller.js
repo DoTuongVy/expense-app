@@ -33,6 +33,8 @@ const GiaoDichController = {
                 amount      : gd.amount,
                 trans_date  : gd.trans_date,
                 note        : gd.note,
+                note2        : gd.note2,
+                
             }));
 
             res.json({ thanhCong: true, duLieu: chuanHoa });
@@ -41,7 +43,7 @@ const GiaoDichController = {
 
     them: async (req, res, next) => {
         try {
-            const { thang, nam, danhMucId, loai, soTien, ngay, ghiChu } = req.body;
+            const { thang, nam, danhMucId, loai, soTien, ngay, ghiChu, ghiChu2 } = req.body;
 
             if (!soTien || soTien <= 0) return res.status(400).json({ thanhCong: false, thongBao: 'Số tiền không hợp lệ' });
             if (!danhMucId)            return res.status(400).json({ thanhCong: false, thongBao: 'Chưa chọn danh mục' });
@@ -60,6 +62,7 @@ const GiaoDichController = {
                 soTien    : Number(soTien),
                 ngay      : ngay || new Date().toISOString().split('T')[0],
                 ghiChu,
+                ghiChu2,
             });
 
             res.status(201).json({ thanhCong: true, thongBao: 'Đã thêm giao dịch', id: gdMoi._id });
@@ -69,12 +72,12 @@ const GiaoDichController = {
     sua: async (req, res, next) => {
         try {
             const { id } = req.params;
-            const { danhMucId, loai, soTien, ngay, ghiChu } = req.body;
+            const { danhMucId, loai, soTien, ngay, ghiChu, ghiChu2 } = req.body;
 
             const gd = await GiaoDichModel.layTheoId(id);
             if (!gd) return res.status(404).json({ thanhCong: false, thongBao: 'Không tìm thấy' });
 
-            await GiaoDichModel.sua(id, { danhMucId, loai, soTien: Number(soTien), ngay, ghiChu });
+            await GiaoDichModel.sua(id, { danhMucId, loai, soTien: Number(soTien), ngay, ghiChu, ghiChu2 });
             res.json({ thanhCong: true, thongBao: 'Đã cập nhật' });
         } catch (loi) { next(loi); }
     },

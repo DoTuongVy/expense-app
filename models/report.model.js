@@ -56,6 +56,20 @@ const BaoCaoModel = {
         return ketQua;
     },
 
+    // ? Chi tiêu theo từng ngày trong tháng
+chiTheoNgay: async (kyThangId) => {
+    const { GiaoDich } = require('./transaction.model');
+    return GiaoDich.aggregate([
+        { $match: { period_id: new mongoose.Types.ObjectId(kyThangId), is_adjustment: false } },
+        { $group: {
+            _id     : { $dateToString: { format: '%Y-%m-%d', date: '$trans_date' } },
+            tongThu : { $sum: { $cond: [{ $in: ['$type', ['income','debt_take','debt_collect']] }, '$amount', 0] } },
+            tongChi : { $sum: { $cond: [{ $in: ['$type', ['expense','debt_give','debt_pay','saving']] }, '$amount', 0] } },
+        }},
+        { $sort: { _id: 1 } },
+    ]);
+},
+
     layDanhSachNam: async () => {
         const { KyThang } = require('./period.model');
         const cacNam = await KyThang.distinct('year');
