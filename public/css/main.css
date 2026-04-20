@@ -1177,37 +1177,6 @@ select.fi option { background: #ffffff; color: var(--text); }
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 !=======================================================================================
  ! MODAL XÁC NHẬN — thay confirm()
@@ -1230,6 +1199,459 @@ select.fi option { background: #ffffff; color: var(--text); }
 }
 
 #modal-xacnhan .btn-danger:hover { opacity: .8; }
+
+
+/* =====================================================================
+   !SIDEBAR ACCORDION
+   ===================================================================== */
+
+.nav-accordion {}
+
+.nav-acc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.nav-acc-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.nav-acc-arrow {
+    width: 14px;
+    height: 14px;
+    color: var(--text3);
+    transition: transform .2s;
+    flex-shrink: 0;
+}
+
+.nav-acc-arrow.open { transform: rotate(180deg); }
+
+.nav-acc-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .25s ease;
+}
+
+.nav-acc-body.open { max-height: 400px; }
+
+/* =====================================================================
+   PASSWORD PAGE
+   ===================================================================== */
+
+.mk-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* --- Header controls --- */
+.mk-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mk-search-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mk-search-icon {
+    position: absolute;
+    left: 10px;
+    width: 16px;
+    height: 16px;
+    color: var(--text3);
+    pointer-events: none;
+}
+
+.mk-search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 8px 10px 8px 34px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--font);
+    transition: border-color .15s;
+}
+
+.mk-search:focus { border-color: var(--blue); outline: none; }
+
+.mk-search-clear {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+}
+
+/* --- Tabs nhóm --- */
+.mk-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.mk-tab {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: var(--font);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.mk-tab:hover { border-color: var(--blue); color: var(--blue); }
+
+.mk-tab.active {
+    background: var(--blue-d);
+    border-color: rgba(77,159,255,.3);
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.mk-tab-count {
+    font-size: 10px;
+    opacity: .7;
+    font-family: var(--mono);
+}
+
+/* --- Card --- */
+.mk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mk-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 14px 14px 12px;
+    display: flex;
+    gap: 12px;
+    transition: border-color .15s;
+    position: relative;
+}
+
+.mk-card:hover { border-color: var(--border2); }
+
+.mk-card.important {
+    border-left: 3px solid var(--yellow, #f59e0b);
+}
+
+.mk-card-left {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+}
+
+.mk-platform-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.mk-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mk-top-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.mk-platform {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.mk-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.mk-badge.important {
+    background: rgba(245,158,11,.15);
+    color: #f59e0b;
+}
+
+.mk-badge.nhom {
+    background: var(--surface2);
+    color: var(--text3);
+    border: 1px solid var(--border);
+}
+
+.mk-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mk-label {
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+.mk-value-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+}
+
+.mk-value {
+    font-size: 13px;
+    color: var(--text);
+    word-break: break-all;
+}
+
+.mk-value.mono { font-family: var(--mono); letter-spacing: .05em; }
+
+.mk-copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 5px;
+    cursor: pointer;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    transition: all .15s;
+    flex-shrink: 0;
+}
+
+.mk-copy-btn svg { width: 12px; height: 12px; }
+.mk-copy-btn:hover { background: var(--blue-d); border-color: var(--blue); color: var(--blue); }
+
+.mk-eye-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 5px;
+    cursor: pointer;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    transition: all .15s;
+    flex-shrink: 0;
+}
+
+.mk-eye-btn svg { width: 14px; height: 14px; }
+.mk-eye-btn:hover { background: var(--surface2); }
+
+.mk-note {
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border-left: 2px solid var(--border2);
+}
+
+.mk-note2 { border-left-color: var(--blue); opacity: .85; }
+
+.mk-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.mk-meta {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+}
+
+.mk-ls-btn {
+    font-size: 10px;
+    color: var(--blue);
+    background: var(--blue-d);
+    border: 1px solid rgba(77,159,255,.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: opacity .15s;
+}
+
+.mk-ls-btn:hover { opacity: .75; }
+
+.mk-link {
+    font-size: 10px;
+    color: var(--green);
+    text-decoration: none;
+}
+.mk-link:hover { text-decoration: underline; }
+
+/* --- Card actions --- */
+.mk-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: flex-start;
+    opacity: 0;
+    transition: opacity .15s;
+}
+
+.mk-card:hover .mk-card-actions { opacity: 1; }
+
+@media (hover: none) { .mk-card-actions { opacity: 1; } }
+
+.mk-action-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 5px;
+    cursor: pointer;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+}
+
+.mk-action-btn svg { width: 14px; height: 14px; }
+.mk-action-btn.edit:hover  { background: var(--blue-d);  border-color: var(--blue);  color: var(--blue); }
+.mk-action-btn.star:hover,
+.mk-action-btn.star.active { background: rgba(245,158,11,.12); border-color: #f59e0b; color: #f59e0b; }
+.mk-action-btn.del:hover   { background: var(--red-d);   border-color: var(--red);   color: var(--red); }
+
+/* --- Lịch sử modal --- */
+.mk-ls-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+/* --- Input eye / gen buttons --- */
+.mk-fi-eye,
+.mk-fi-gen {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    transition: all .15s;
+}
+
+.mk-fi-eye:hover,
+.mk-fi-gen:hover { background: var(--surface2); color: var(--text); }
+
+/* nav sub-label (dùng trong accordion thay nav-group-label) */
+.nav-sub-label {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 8px 8px 2px 8px;
+  margin-top: 4px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*

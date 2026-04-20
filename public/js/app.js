@@ -64,6 +64,17 @@ document.getElementById('fi-sotien').addEventListener('input', function() {
             document.getElementById('sidebar').classList.toggle('open');
         });
 
+        // ? Sidebar accordion
+        document.querySelectorAll('.nav-acc-header').forEach(hdr => {
+            hdr.addEventListener('click', () => {
+                const key  = hdr.dataset.acc;
+                const body = document.getElementById(`acc-body-${key}`);
+                const arr  = hdr.querySelector('.nav-acc-arrow');
+                const open = body.classList.toggle('open');
+                arr.classList.toggle('open', open);
+            });
+        });
+
         App.chuyenTrang('dashboard');
     },
 
@@ -87,9 +98,16 @@ document.getElementById('fi-sotien').addEventListener('input', function() {
             'bao-cao-thang' : 'Báo cáo tháng',
             'bao-cao-nam'   : 'Báo cáo năm',
             'no'            : 'Theo dõi nợ',
+            'mat-khau'      : 'Quản lý mật khẩu',
         };
         document.getElementById('topbar-title').textContent = bangTen[tenTrang] || tenTrang;
         document.getElementById('sidebar').classList.remove('open');
+
+        // ? Ẩn month-nav và btn-them-gd khi ở trang mật khẩu
+        const anTopbarExtra = tenTrang === 'mat-khau';
+        document.querySelector('.month-nav').style.display  = anTopbarExtra ? 'none' : '';
+        document.getElementById('btn-them-gd').style.display = anTopbarExtra ? 'none' : '';
+
         App._renderTrang(tenTrang);
     },
 
@@ -104,6 +122,7 @@ document.getElementById('fi-sotien').addEventListener('input', function() {
             case 'bao-cao-thang' : trangBaoCaoThang.render(t, n); break;
             case 'bao-cao-nam'   : trangBaoCaoNam.render(t, n);   break;
             case 'no'            : trangNo.render();               break;
+            case 'mat-khau'      : trangMatKhau.render();          break;
         }
     },
 

@@ -127,3 +127,19 @@ const ApiNo = {
     capNhatDaTra  : (id, body)    => goiApi(`/no/${id}/tra`,   { method: 'PUT',    body }),
     xoa           : (id)          => goiApi(`/no/${id}`,       { method: 'DELETE' }),
 };
+
+/*
+!=======================================================================================
+ ! API MẬT KHẨU
+!=======================================================================================
+*/
+
+const ApiMatKhau = {
+    layTatCa  : (nhom, q) => goiApi(`/mat-khau?${new URLSearchParams({ nhom: nhom||'', q: q||'' })}`),
+    layNhom   : ()        => goiApi('/mat-khau/nhom'),
+    layTheoId : (id)      => goiApi(`/mat-khau/${id}`),
+    them      : (body)    => goiApi('/mat-khau',                          { method: 'POST',   body }),
+    sua       : (id, body)=> goiApi(`/mat-khau/${id}`,                    { method: 'PUT',    body }),
+    xoaLichSu : (id, lsId)=> goiApi(`/mat-khau/${id}/lich-su/${lsId}`,   { method: 'DELETE' }),
+    xoa       : (id)      => goiApi(`/mat-khau/${id}`,                    { method: 'DELETE' }),
+};

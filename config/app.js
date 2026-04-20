@@ -22,6 +22,7 @@ const routeKyThang   = require('../routes/periods.routes');
 const routeMucTieu   = require('../routes/goals.routes');
 const routeBaoCao    = require('../routes/reports.routes');
 const routeNo        = require('../routes/debts.routes');
+const routePass        = require('../routes/passwords.routes');
 
 /*
 !======================================================================================================================================
@@ -64,6 +65,7 @@ app.use('/api/ky-thang',    routeKyThang);
 app.use('/api/muc-tieu',    routeMucTieu);
 app.use('/api/bao-cao',     routeBaoCao);
 app.use('/api/no',          routeNo);
+app.use('/api/mat-khau',    routePass);
 
 /*
 !======================================================================================================================================
