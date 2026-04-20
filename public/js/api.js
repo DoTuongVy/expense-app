@@ -143,3 +143,17 @@ const ApiMatKhau = {
     xoaLichSu : (id, lsId)=> goiApi(`/mat-khau/${id}/lich-su/${lsId}`,   { method: 'DELETE' }),
     xoa       : (id)      => goiApi(`/mat-khau/${id}`,                    { method: 'DELETE' }),
 };
+
+/*
+!=======================================================================================
+ ! API CHI TIÊU CỐ ĐỊNH — MỚI
+!=======================================================================================
+*/
+
+const ApiChiTieuCoDinh = {
+    layTheoThang    : (thang, nam) => goiApi(`/chi-tieu-co-dinh?thang=${thang}&nam=${nam}`),
+    them            : (body)       => goiApi('/chi-tieu-co-dinh',              { method: 'POST',   body }),
+    sua             : (id, body)   => goiApi(`/chi-tieu-co-dinh/${id}`,        { method: 'PUT',    body }),
+    xoa             : (id)         => goiApi(`/chi-tieu-co-dinh/${id}`,        { method: 'DELETE' }),
+    capNhatTrangThai: (id, body)   => goiApi(`/chi-tieu-co-dinh/${id}/trang-thai`, { method: 'PUT', body }),
+};
