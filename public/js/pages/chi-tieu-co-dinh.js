@@ -28,9 +28,25 @@ const trangChiTieuCoDinh = {
             const soDaDong     = ds.filter(k => k.daDong).length;
 
             // ? Tìm khoản sắp đến hạn (trong 5 ngày tới) chưa đóng
-            const homNay    = new Date();
-            const ngayHienTai = homNay.getDate();
-            const sapDenHan = ds.filter(k => !k.daDong && k.ngayDenHan >= ngayHienTai && k.ngayDenHan <= ngayHienTai + 5);
+            const homNay      = new Date();
+const thangThat   = homNay.getMonth() + 1;
+const namThat     = homNay.getFullYear();
+const ngayHienTai = homNay.getDate();
+
+// ? Chỉ so sánh ngày thực nếu đang xem đúng tháng/năm hiện tại
+// ? Tháng tương lai: không có gì quá hạn, chưa đến hạn hết
+// ? Tháng quá khứ: tất cả chưa đóng đều là quá hạn
+const dangXemThangNay = (thang === thangThat && nam === namThat);
+const dangXemTuongLai = (nam > namThat) || (nam === namThat && thang > thangThat);
+
+const ngayDocLap = dangXemThangNay ? ngayHienTai : dangXemTuongLai ? 0 : 32;
+
+const sapDenHan = ds.filter(k =>
+    !k.daDong &&
+    dangXemThangNay &&
+    k.ngayDenHan >= ngayHienTai &&
+    k.ngayDenHan <= ngayHienTai + 5
+);
 
             content.innerHTML = `
                 ${sapDenHan.length ? `
@@ -89,7 +105,7 @@ const trangChiTieuCoDinh = {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${ds.map(k => trangChiTieuCoDinh._renderDong(k, ngayHienTai)).join('')}
+                                ${ds.map(k => trangChiTieuCoDinh._renderDong(k, ngayDocLap)).join('')}
                             </tbody>
                         </table>`
                     }

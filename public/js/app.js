@@ -76,6 +76,7 @@ const App = {
         });
 
         App.chuyenTrang('dashboard');
+        App._kiemTraSapDenHan();
     },
 
     /*
@@ -132,6 +133,85 @@ const App = {
         App._renderTrang(App._trangHienTai);
         App._capNhatSoDuSidebar();
     },
+    
+
+
+    /*
+!=======================================================================================
+ ? Kiểm tra khoản cố định sắp đến hạn khi khởi động
+!=======================================================================================
+*/
+_kiemTraSapDenHan: async () => {
+    try {
+        const t      = App._thangHienTai;
+        const n      = App._namHienTai;
+        const ketQua = await ApiChiTieuCoDinh.layTheoThang(t, n);
+        const ds     = ketQua.duLieu || [];
+
+        const homNay      = new Date();
+        const ngayHienTai = homNay.getDate();
+
+        const sapHan = ds.filter(k =>
+            !k.daDong &&
+            k.ngayDenHan >= ngayHienTai &&
+            k.ngayDenHan <= ngayHienTai + 5
+        );
+        const quaHan = ds.filter(k =>
+            !k.daDong && k.ngayDenHan < ngayHienTai
+        );
+
+        const tatCa = [...quaHan, ...sapHan];
+        if (!tatCa.length) return;
+
+        // ? Tạo modal nếu chưa có
+        if (!document.getElementById('modal-noti-han')) {
+            const el = document.createElement('div');
+            el.className  = 'modal-overlay';
+            el.id         = 'modal-noti-han';
+            el.innerHTML  = `
+                <div class="modal" style="max-width:420px">
+                    <div class="modal-hd">
+                        <span class="modal-title">🔔 Nhắc nhở thanh toán</span>
+                        <button class="modal-close" onclick="UI.dongModal('modal-noti-han')">✕</button>
+                    </div>
+                    <div id="modal-noti-han-body" style="padding:0 20px 20px"></div>
+                    <div style="padding:0 20px 20px">
+                        <button class="btn-submit" onclick="UI.dongModal('modal-noti-han')">Đã hiểu</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(el);
+
+            // ? Đóng khi bấm nền
+            el.addEventListener('click', (e) => {
+                if (e.target === el) UI.dongModal('modal-noti-han');
+            });
+        }
+
+        // ? Render nội dung
+        const body = document.getElementById('modal-noti-han-body');
+        body.innerHTML = `
+            ${quaHan.length ? `
+            <div style="margin-bottom:14px">
+                <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+                    🔴 Đã quá hạn (${quaHan.length})
+                </div>
+                ${quaHan.map(k => _renderDongNoti(k, 'overdue')).join('')}
+            </div>` : ''}
+
+            ${sapHan.length ? `
+            <div>
+                <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
+                    🟡 Sắp đến hạn — trong 5 ngày tới (${sapHan.length})
+                </div>
+                ${sapHan.map(k => _renderDongNoti(k, 'soon')).join('')}
+            </div>` : ''}
+        `;
+
+        UI.moModal('modal-noti-han');
+    } catch (_) {}
+},
+
 
     /*
     !=======================================================================================
@@ -360,6 +440,32 @@ const App = {
         }
     },
 };
+
+
+
+
+const _renderDongNoti = (k, loai) => {
+    const mauNen  = loai === 'overdue' ? 'rgba(239,68,68,.07)'  : 'rgba(245,158,11,.07)';
+    const mauVien = loai === 'overdue' ? 'var(--red)'           : 'var(--amber)';
+    return `
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;
+                    background:${mauNen};border-left:3px solid ${mauVien};
+                    border-radius:0 6px 6px 0;margin-bottom:6px">
+            <span style="font-size:18px">${k.iconDanhMuc || '💸'}</span>
+            <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">${k.ten}</div>
+                <div style="font-size:11px;color:var(--text3)">
+                    ${k.tenDanhMuc} · Ngày ${k.ngayDenHan}
+                </div>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:13px;color:${mauVien}">
+                ${dinhDangTien(k.soTien)}
+            </div>
+        </div>
+    `;
+};
+
+
 
 /*
 !=======================================================================================
