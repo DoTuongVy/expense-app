@@ -12,6 +12,7 @@ const SchemaMucTieu = new mongoose.Schema({
     period_id     : { type: mongoose.Schema.Types.ObjectId, ref: 'Period',   required: true },
     category_id   : { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     target_amount : { type: Number, required: true, min: 0 },
+    note          : { type: String, default: '' },  // ! Ghi chú cho mục tiêu
 }, { timestamps: true });
 
 // ? Mỗi danh mục chỉ có 1 mục tiêu/tháng
@@ -53,6 +54,7 @@ const MucTieuModel = {
                 nhomDanhMuc     : mt.category_id.type,
                 soTienThucTe,
                 chenhLech       : mt.target_amount - soTienThucTe,
+                ghiChu          : mt.note || '',  // ! Thêm ghi chú
             };
         }));
 
@@ -60,10 +62,13 @@ const MucTieuModel = {
     },
 
     // ! Upsert — đã có thì update, chưa có thì insert
-    datMucTieu: async (kyThangId, danhMucId, soTienMucTieu) => {
+    datMucTieu: async (kyThangId, danhMucId, soTienMucTieu, ghiChu = '') => {
         return MucTieu.findOneAndUpdate(
             { period_id: kyThangId, category_id: danhMucId },
-            { target_amount: soTienMucTieu },
+            { 
+                target_amount: soTienMucTieu,
+                note: ghiChu  // ! Lưu ghi chú
+            },
             { upsert: true, new: true }
         );
     },

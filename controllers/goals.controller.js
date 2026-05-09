@@ -21,12 +21,12 @@ const MucTieuController = {
 
     datMucTieu: async (req, res, next) => {
         try {
-            const { thang, nam, danhMucId, soTienMucTieu } = req.body;
+            const { thang, nam, danhMucId, soTienMucTieu, ghiChu } = req.body;
             if (!soTienMucTieu || soTienMucTieu <= 0) {
                 return res.status(400).json({ thanhCong: false, thongBao: 'Số tiền không hợp lệ' });
             }
             const ky = await KyThangModel.layHoacTaoKy(parseInt(thang), parseInt(nam));
-            await MucTieuModel.datMucTieu(ky._id, danhMucId, Number(soTienMucTieu));
+            await MucTieuModel.datMucTieu(ky._id, danhMucId, Number(soTienMucTieu), ghiChu || '');
             res.json({ thanhCong: true, thongBao: 'Đã lưu mục tiêu' });
         } catch (loi) { next(loi); }
     },

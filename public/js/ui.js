@@ -143,15 +143,17 @@ const UI = {
     /*
     !=======================================================================================
      ! Modal đặt mục tiêu — load danh mục vào select
+     ? CHỈ HIỂN THỊ DANH MỤC CHI TIÊU (expense) — vì mục tiêu để giới hạn chi tiêu
     !=======================================================================================
     */
     moModalMucTieu: async () => {
-        const ketQua  = await ApiDanhMuc.layTatCa().catch(() => ({ duLieu: [] }));
+        const ketQua  = await ApiDanhMuc.layTatCa('expense').catch(() => ({ duLieu: [] }));
         const sel     = document.getElementById('fi-mt-danhmuc');
         sel.innerHTML = ketQua.duLieu.map(dm =>
             `<option value="${dm._id || dm.id}">${dm.icon || ''} ${dm.name}</option>`
         ).join('');
         document.getElementById('fi-mt-sotien').value = '';
+        document.getElementById('fi-mt-ghichu').value = '';  // ! Clear ghi chú
         UI.moModal('modal-muctieu');
         setTimeout(() => document.getElementById('fi-mt-sotien').focus(), 100);
     },

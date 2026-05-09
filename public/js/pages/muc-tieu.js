@@ -37,6 +37,7 @@ const trangMucTieu = {
                             <thead>
                                 <tr>
                                     <th>Danh mục</th>
+                                    <th>Ghi chú</th>
                                     <th style="text-align:right">Mục tiêu</th>
                                     <th style="text-align:right">Thực tế</th>
                                     <th style="text-align:right">Chênh lệch</th>
@@ -51,6 +52,7 @@ const trangMucTieu = {
                                     const mtId  = mt.id || mt._id;
                                     return `<tr>
                                         <td>${mt.iconDanhMuc || ''} ${mt.tenDanhMuc}</td>
+                                        <td style="font-size:12px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${mt.ghiChu || '—'}</td>
                                         <td class="num">${dinhDangTien(mt.soTienMucTieu)}</td>
                                         <td class="num ${mt.soTienThucTe > 0 ? 'neg' : ''}">${dinhDangTien(mt.soTienThucTe)}</td>
                                         <td class="num ${cl >= 0 ? 'pos' : 'neg'}">${cl >= 0 ? '+' : ''}${dinhDangTien(cl)}</td>
@@ -88,6 +90,7 @@ const trangMucTieu = {
     _luuMucTieu: async () => {
         const danhMucId     = document.getElementById('fi-mt-danhmuc').value;
         const soTienMucTieu = parseTien(document.getElementById('fi-mt-sotien').value);
+        const ghiChu        = document.getElementById('fi-mt-ghichu').value.trim();  // ! Lấy ghi chú
 
         if (!soTienMucTieu || soTienMucTieu <= 0) { hienToast('Nhập số tiền mục tiêu!', 'err'); return; }
 
@@ -97,6 +100,7 @@ const trangMucTieu = {
                 nam         : trangMucTieu._nam,
                 danhMucId,
                 soTienMucTieu,
+                ghiChu,  // ! Gửi ghi chú
             });
             hienToast('Đã lưu mục tiêu', 'ok');
             UI.dongModal('modal-muctieu');

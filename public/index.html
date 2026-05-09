@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Chi Tiêu Cá Nhân</title>
+<link rel="icon" type="image/png" href="/images/logo-chi-tieu.png">
+    <link rel="shortcut icon" type="image/png" href="/images/logo-chi-tieu.png">
+    <link rel="apple-touch-icon" href="/images/logo-chi-tieu.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
@@ -249,14 +254,21 @@
       <span class="modal-title">Đặt mục tiêu</span>
       <button class="modal-close" onclick="UI.dongModal('modal-muctieu')">✕</button>
     </div>
+    <div style="padding:0 4px 12px;font-size:12px;color:var(--text3);line-height:1.4">
+      💡 Mục tiêu giúp bạn giới hạn chi tiêu theo từng danh mục trong tháng. Chỉ áp dụng cho <strong style="color:var(--red)">danh mục chi tiêu</strong>.
+    </div>
     <div class="form-body">
       <div class="fg">
-        <label class="fl">Danh mục</label>
+        <label class="fl">Danh mục chi tiêu</label>
         <select class="fi" id="fi-mt-danhmuc"></select>
       </div>
       <div class="fg">
         <label class="fl">Số tiền mục tiêu</label>
         <input class="fi fi-money" id="fi-mt-sotien" type="text" placeholder="0 đ" oninput="formatInputTien(this)">
+      </div>
+      <div class="fg">
+        <label class="fl">Ghi chú</label>
+        <input class="fi" id="fi-mt-ghichu" type="text" placeholder="VD: Cần tiết kiệm hơn tháng trước">
       </div>
       <button class="btn-submit" id="btn-luu-muctieu">Lưu mục tiêu</button>
     </div>
