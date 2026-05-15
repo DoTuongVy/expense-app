@@ -2,7 +2,7 @@
 
 /*
 !=======================================================================================
- ! MODELS/TRANSACTION.MODEL.JS — Schema giao dịch (Mongoose)
+ ! MODELS/TRANSACTION.MODEL.JS - Schema MongoDB cho giao dịch
 !=======================================================================================
 */
 

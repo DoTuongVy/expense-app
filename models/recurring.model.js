@@ -2,7 +2,7 @@
 
 /*
 !=======================================================================================
- ! MODELS/RECURRING.MODEL.JS — Schema chi tiêu cố định hàng tháng
+ ! MODELS/RECURRING.MODEL.JS - Schema MongoDB cho  chi tiêu cố định hàng tháng
 !=======================================================================================
 */
 

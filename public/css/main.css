@@ -1205,7 +1205,6 @@ select.fi option { background: #ffffff; color: var(--text); }
    !SIDEBAR ACCORDION
    ===================================================================== */
 
-.nav-accordion {}
 
 .nav-acc-header {
     display: flex;
@@ -1750,6 +1749,44 @@ select.fi option { background: #ffffff; color: var(--text); }
 .ctcd-btn-trang-thai.pending:hover {
   border-color: var(--green, #22c55e);
   color: var(--green, #22c55e);
+}
+
+
+
+
+/*
+!=======================================================================================
+ ! PHẦN DỮ LIỆU CHI TIÊU - SO SÁNH CHI TIÊU MỖI NGÀY TRONG THÁNG
+!=======================================================================================
+*/
+
+/* Card màu cảnh báo/thành công */
+.surface-warning {
+  background: rgba(232, 41, 74, 0.05) !important;
+}
+
+.surface-success {
+  background: rgba(0, 168, 84, 0.05) !important;
+}
+
+/* Hover effect cho card so sánh */
+.card [onclick] {
+  transition: opacity 0.2s;
+}
+
+.card [onclick]:hover {
+  opacity: 0.8;
+}
+
+/* Style cho bảng so sánh */
+table thead th {
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+table tbody tr:hover {
+  background: var(--surface2);
 }
 
 
