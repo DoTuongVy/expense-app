@@ -23,9 +23,9 @@ const [ketQua, ketQuaTruoc, ketQuaNgay] = await Promise.all([
 ]);
             const { kyThang, tongHop, theoDanhMuc, mucTieu } = ketQua.duLieu;
 
-            const soDuCuoi = (tongHop?.opening_balance || 0)
-                           + (tongHop?.total_income    || 0)
-                           - (tongHop?.total_expense   || 0);
+            // ✅ Lấy system_balance từ kyThang thay vì tính toán
+const soDuCuoi = kyThang?.system_balance || 
+                 ((tongHop?.opening_balance || 0) + (tongHop?.total_income || 0) - (tongHop?.total_expense || 0));
 
             const bangMucTieu = {};
             (mucTieu || []).forEach(mt => { bangMucTieu[mt.danhMucId] = mt.soTienMucTieu; });
@@ -276,37 +276,50 @@ const pctChi = tongChiTruoc > 0 ? Math.round((tongChi - tongChiTruoc) / tongChiT
                     </table>
                 </div>
 
-                <!-- ! Chốt tháng -->
-                ${!kyThang?.is_closed ? `
-                <div class="card">
-                    <div class="card-hd">
-                        <span class="card-title">Chốt tháng ${thang}/${nam}</span>
-                        <span class="badge amber">Chưa chốt</span>
-                    </div>
-                    <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px">
-                        Số dư hệ thống tính được: <strong style="color:var(--green);font-family:var(--mono)">${dinhDangTien(soDuCuoi)}</strong>
-                        <br>Nhập số tiền thực tế bạn đang có để chốt tháng.
-                    </div>
-                    <div class="form-row" style="max-width:400px">
-                        <div class="fg">
-                            <label class="fl">Số dư thực tế</label>
-                            <input class="fi fi-money" id="fi-sodu-thucte" type="text" placeholder="0đ" oninput="formatInputTien(this)">
-                        </div>
-                        <div class="fg">
-                            <label class="fl">Ghi chú</label>
-                            <input class="fi" id="fi-ghichu-chot" type="text" placeholder="(tuỳ chọn)">
-                        </div>
-                    </div>
-                    <button class="btn-secondary" style="margin-top:12px" onclick="trangBaoCaoThang.chotThang('${kyThang?._id || kyThang?.id}')">
-                        Chốt tháng
-                    </button>
-                </div>` : `
-                <div class="warning-box" style="justify-content:center">
-                    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-                        <span>✅ Tháng ${thang}/${nam} đã được chốt vào ${dinhDangNgay(kyThang.closed_at)}</span>
-                        <button class="btn-secondary" onclick="trangBaoCaoThang.huyChot('${kyThang?._id || kyThang?.id}')">Huỷ chốt</button>
-                    </div>
-                </div>`}
+                <!-- ! Cập nhật số dư & Chốt tháng -->
+${!kyThang?.is_closed ? `
+<div class="card">
+    <div class="card-hd">
+        <span class="card-title">Quản lý số dư tháng ${thang}/${nam}</span>
+        <span class="badge amber">Chưa chốt</span>
+    </div>
+    <div style="font-size:12.5px;color:var(--text2);margin-bottom:14px">
+        Số dư hệ thống tính được: <strong style="color:var(--green);font-family:var(--mono)">${dinhDangTien(soDuCuoi)}</strong>
+    </div>
+    
+    <!-- Form nhập -->
+    <div class="form-row" style="max-width:400px;margin-bottom:14px">
+        <div class="fg">
+            <label class="fl">Số dư thực tế</label>
+            <input class="fi fi-money" id="fi-sodu-thucte" type="text" placeholder="0đ" oninput="formatInputTien(this)">
+        </div>
+        <div class="fg">
+            <label class="fl">Ghi chú</label>
+            <input class="fi" id="fi-ghichu-chot" type="text" placeholder="(tuỳ chọn)">
+        </div>
+    </div>
+    
+    <!-- 2 nút riêng biệt -->
+    <div style="display:flex;gap:10px">
+        <button class="btn-secondary" style="flex:1" onclick="trangBaoCaoThang.capNhatSoDu('${kyThang?._id || kyThang?.id}')">
+            💾 Cập nhật số dư
+        </button>
+        <button class="btn-submit" style="flex:1;margin:0" onclick="trangBaoCaoThang.chotThang('${kyThang?._id || kyThang?.id}')">
+            🔒 Chốt tháng
+        </button>
+    </div>
+    
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px;background:var(--surface2);border-radius:6px">
+        💡 <strong>Cập nhật số dư:</strong> Chỉnh số liệu cho chính xác, không khóa tháng.<br>
+        💡 <strong>Chốt tháng:</strong> Khóa tháng này và lưu làm số dư đầu kỳ cho tháng sau.
+    </div>
+</div>` : `
+<div class="warning-box" style="justify-content:center">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+        <span>✅ Tháng ${thang}/${nam} đã được chốt vào ${dinhDangNgay(kyThang.closed_at)}</span>
+        <button class="btn-secondary" onclick="trangBaoCaoThang.huyChot('${kyThang?._id || kyThang?.id}')">Huỷ chốt</button>
+    </div>
+</div>`}
             `;
 
         } catch (loi) {
@@ -382,15 +395,35 @@ const pctChi = tongChiTruoc > 0 ? Math.round((tongChi - tongChiTruoc) / tongChiT
 },
 
     chotThang: async (kyThangId) => {
-        const soduThucTe = parseTien(document.getElementById('fi-sodu-thucte')?.value);
-        const ghiChu     = document.getElementById('fi-ghichu-chot')?.value;
-        if (!soduThucTe) { hienToast('Nhập số dư thực tế trước!', 'err'); return; }
-        try {
-            await ApiKyThang.chotThang(kyThangId, { soduThucTe, ghiChu });
-            hienToast('Đã chốt tháng thành công!', 'ok');
-            App.taiLaiTrang();
-        } catch (loi) { hienToast(loi.message, 'err'); }
-    },
+    const soduThucTe = parseTien(document.getElementById('fi-sodu-thucte')?.value);
+    const ghiChu     = document.getElementById('fi-ghichu-chot')?.value;
+    if (!soduThucTe) { hienToast('Nhập số dư thực tế trước!', 'err'); return; }
+    try {
+        await ApiKyThang.chotThang(kyThangId, { soduThucTe, ghiChu });
+        hienToast('Đã chốt tháng thành công!', 'ok');
+        App.taiLaiTrang();
+    } catch (loi) { hienToast(loi.message, 'err'); }
+},
+
+capNhatSoDu: async (kyThangId) => {
+    const soduThucTe = parseTien(document.getElementById('fi-sodu-thucte')?.value);
+    const ghiChu     = document.getElementById('fi-ghichu-chot')?.value;
+    if (!soduThucTe) { hienToast('Nhập số dư thực tế trước!', 'err'); return; }
+    
+    try {
+        await ApiKyThang.capNhatSoDu(kyThangId, { 
+            soduThucTe, 
+            ghiChu
+        });
+        
+        hienToast('✅ Đã cập nhật số dư!', 'ok');
+        App.taiLaiTrang();
+    } catch (loi) { 
+        hienToast(loi.message, 'err'); 
+    }
+},
+
+    
 
     huyChot: (kyThangId) => {
         UI.xacNhan('Huỷ chốt tháng này?', async () => {

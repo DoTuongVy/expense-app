@@ -25,6 +25,43 @@ const KyThangController = {
         } catch (loi) { next(loi); }
     },
 
+    // ! Cập nhật số dư — KHÔNG chốt tháng
+// ! Cập nhật số dư — tính ngược opening_balance
+capNhatSoDu: async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { soduThucTe, ghiChu } = req.body;
+
+        if (soduThucTe === undefined) {
+            return res.status(400).json({ thanhCong: false, thongBao: 'Cần nhập số dư thực tế' });
+        }
+
+        // Tính tổng thu chi của kỳ này
+        const tongHop = await GiaoDichModel.tinhTongHop(id);
+        
+        // Tính ngược opening_balance để ra đúng số dư mong muốn
+        // soduThucTe = opening_balance + thu - chi
+        // => opening_balance = soduThucTe - thu + chi
+        const openingBalance = Number(soduThucTe) - tongHop.total_income + tongHop.total_expense;
+
+        // ✅ CẬP NHẬT CẢ opening_balance VÀ system_balance
+        await KyThang.findByIdAndUpdate(id, {
+            opening_balance: openingBalance,
+            system_balance: Number(soduThucTe),  // ✅ THÊM DÒNG NÀY
+            adjustment_note: ghiChu || `Cập nhật số dư thành ${Number(soduThucTe).toLocaleString('vi-VN')}đ`
+        });
+
+        res.json({ 
+            thanhCong: true, 
+            thongBao: 'Đã cập nhật số dư',
+            duLieu: { 
+                soduThucTe: Number(soduThucTe),
+                openingBalance: openingBalance
+            }
+        });
+    } catch (loi) { next(loi); }
+},
+
     // ! Chốt tháng — user nhập số tiền thực tế đang có trong túi
     chotThang: async (req, res, next) => {
         try {

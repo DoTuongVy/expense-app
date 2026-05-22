@@ -78,6 +78,8 @@ const GiaoDichModel = {
 
     xoa: async (id) => GiaoDich.findByIdAndDelete(id),
 
+    
+
     // ! Thêm dòng điều chỉnh chênh lệch cuối tháng
     themDieuChinh: async (kyThangId, soTienChenhLech, danhMucId) => {
         const loai = soTienChenhLech >= 0 ? 'income' : 'expense';
@@ -91,6 +93,14 @@ const GiaoDichModel = {
             is_adjustment : true,
         });
     },
+
+    //! Xóa giao dịch điều chỉnh cũ của kỳ
+xoaDieuChinhCu: async (kyThangId) => {
+    return GiaoDich.deleteMany({ 
+        period_id: kyThangId, 
+        is_adjustment: true 
+    });
+},
 
     // ? Tính tổng hợp cho 1 kỳ (thay thế view MySQL)
     tinhTongHop: async (kyThangId) => {

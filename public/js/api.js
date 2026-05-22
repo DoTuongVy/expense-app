@@ -50,6 +50,7 @@ const ApiKyThang = {
     layHienTai : ()          => goiApi('/ky-thang/hien-tai'),
     layTatCa   : ()          => goiApi('/ky-thang'),
     chotThang  : (id, body)  => goiApi(`/ky-thang/${id}/chot`, { method: 'POST', body }),
+    capNhatSoDu: (id, body) => goiApi(`/ky-thang/${id}/cap-nhat-sodu`, { method: 'PUT', body }),
     huyChot: (id) => goiApi(`/ky-thang/${id}/huy-chot`, { method: 'PUT' }),
 };
 

@@ -7,13 +7,22 @@
 */
 
 const { GiaoDichModel } = require('../models/transaction.model');
-const { KyThangModel }  = require('../models/period.model');
+const { KyThangModel, KyThang } = require('../models/period.model');
 
 /*
 !======================================================================================================================================
 */
 
 const GiaoDichController = {
+
+
+    _capNhatSystemBalance: async (kyThangId) => {
+        const tongHop = await GiaoDichModel.tinhTongHop(kyThangId);
+        const kyThang = await KyThang.findById(kyThangId);
+        const systemBalance = (kyThang.opening_balance || 0) + tongHop.total_income - tongHop.total_expense;
+        await KyThangModel.capNhatSystemBalance(kyThangId, systemBalance);
+    },
+
 
     layDanhSach: async (req, res, next) => {
         try {
@@ -41,7 +50,7 @@ const GiaoDichController = {
         } catch (loi) { next(loi); }
     },
 
-    them: async (req, res, next) => {
+     them: async (req, res, next) => {
         try {
             const { thang, nam, danhMucId, loai, soTien, ngay, ghiChu, ghiChu2 } = req.body;
 
@@ -65,6 +74,9 @@ const GiaoDichController = {
                 ghiChu2,
             });
 
+            // ✅ THÊM DÒNG NÀY: Cập nhật lại system_balance
+            await GiaoDichController._capNhatSystemBalance(kyThang._id);
+
             res.status(201).json({ thanhCong: true, thongBao: 'Đã thêm giao dịch', id: gdMoi._id });
         } catch (loi) { next(loi); }
     },
@@ -78,6 +90,10 @@ const GiaoDichController = {
             if (!gd) return res.status(404).json({ thanhCong: false, thongBao: 'Không tìm thấy' });
 
             await GiaoDichModel.sua(id, { danhMucId, loai, soTien: Number(soTien), ngay, ghiChu, ghiChu2 });
+            
+            // ✅ THÊM DÒNG NÀY: Cập nhật lại system_balance
+            await GiaoDichController._capNhatSystemBalance(gd.period_id);
+
             res.json({ thanhCong: true, thongBao: 'Đã cập nhật' });
         } catch (loi) { next(loi); }
     },
@@ -86,7 +102,13 @@ const GiaoDichController = {
         try {
             const gd = await GiaoDichModel.layTheoId(req.params.id);
             if (!gd) return res.status(404).json({ thanhCong: false, thongBao: 'Không tìm thấy' });
+            
+            const periodId = gd.period_id; // Lưu lại trước khi xóa
             await GiaoDichModel.xoa(req.params.id);
+            
+            // ✅ THÊM DÒNG NÀY: Cập nhật lại system_balance
+            await GiaoDichController._capNhatSystemBalance(periodId);
+
             res.json({ thanhCong: true, thongBao: 'Đã xoá' });
         } catch (loi) { next(loi); }
     },

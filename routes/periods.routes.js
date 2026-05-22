@@ -19,4 +19,7 @@ router.post('/:id/chot',     KyThangController.chotThang);
 // ? PUT /api/ky-thang/:id/huy-chot — huỷ chốt tháng
 router.put('/:id/huy-chot', KyThangController.huyChot);
 
+// ? PUT /api/ky-thang/:id/cap-nhat-sodu — cập nhật số dư không chốt tháng
+router.put('/:id/cap-nhat-sodu', KyThangController.capNhatSoDu);
+
 module.exports = router;

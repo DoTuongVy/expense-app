@@ -247,19 +247,22 @@ _kiemTraSapDenHan: async () => {
     !=======================================================================================
     */
     _capNhatSoDuSidebar: async () => {
-        try {
-            const t = App._thangHienTai;
-            const n = App._namHienTai;
-            const ketQua   = await ApiBaoCao.baoCaoThang(t, n);
-            const tongHop  = ketQua.duLieu?.tongHop;
-            const soDu     = (tongHop?.opening_balance || 0)
-                           + (tongHop?.total_income    || 0)
-                           - (tongHop?.total_expense   || 0);
-            document.getElementById('sidebar-sodu').textContent = dinhDangTien(soDu);
-        } catch (_) {
-            document.getElementById('sidebar-sodu').textContent = '--';
-        }
-    },
+    try {
+        const t = App._thangHienTai;
+        const n = App._namHienTai;
+        const ketQua   = await ApiBaoCao.baoCaoThang(t, n);
+        const kyThang  = ketQua.duLieu?.kyThang;
+        const tongHop  = ketQua.duLieu?.tongHop;
+        
+        // ✅ Ưu tiên system_balance từ kyThang
+        const soDu = kyThang?.system_balance || 
+                     ((tongHop?.opening_balance || 0) + (tongHop?.total_income || 0) - (tongHop?.total_expense || 0));
+        
+        document.getElementById('sidebar-sodu').textContent = dinhDangTien(soDu);
+    } catch (_) {
+        document.getElementById('sidebar-sodu').textContent = '--';
+    }
+},
 
     /*
     !=======================================================================================
