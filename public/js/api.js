@@ -14,60 +14,36 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbzGKu-DwMfZ_KcXfK4EYkO
 !=======================================================================================
 */
 
-const goiApi = (endpoint, tuyChan = {}) => {
-    return new Promise((resolve, reject) => {
-        const method = (tuyChan.method || 'GET').toUpperCase();
+const goiApi = async (endpoint, tuyChan = {}) => {
+    const method = (tuyChan.method || 'GET').toUpperCase();
 
-        const [duongDan, queryString] = endpoint.replace(/^\//, '').split('?');
-        const extraParams = new URLSearchParams(queryString || '');
-        const params = new URLSearchParams();
-        params.set('path', duongDan);
-        extraParams.forEach((v, k) => params.set(k, v));
+    const [duongDan, queryString] = endpoint.replace(/^\//, '').split('?');
+    const extraParams = new URLSearchParams(queryString || '');
+    const params = new URLSearchParams();
+    params.set('path', duongDan);
+    extraParams.forEach((v, k) => params.set(k, v));
 
-        // ! Gửi body qua _body param
-        if (method !== 'GET') {
-            let body = tuyChan.body || {};
-            if (typeof body === 'string') body = JSON.parse(body);
-            body._method = method;
-            params.set('_body',   JSON.stringify(body));
-            params.set('_method', method);
-        }
+    if (method !== 'GET') {
+        let body = tuyChan.body || {};
+        if (typeof body === 'string') body = JSON.parse(body);
+        body._method = method;
+        params.set('_body',   JSON.stringify(body));
+        params.set('_method', method);
+    }
 
-        // ! JSONP — tránh CORS hoàn toàn
-        const cbName  = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
-        params.set('callback', cbName);
+    const url = API_BASE + '?' + params.toString();
 
-        const url     = API_BASE + '?' + params.toString();
-        const script  = document.createElement('script');
-        script.src    = url;
-
-        const timer = setTimeout(() => {
-            cleanup();
-            reject(new Error('Timeout'));
-        }, 15000);
-
-        function cleanup() {
-            clearTimeout(timer);
-            delete window[cbName];
-            if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window[cbName] = (duLieu) => {
-            cleanup();
-            if (!duLieu.thanhCong && duLieu.thongBao) {
-                reject(new Error(duLieu.thongBao));
-            } else {
-                resolve(duLieu);
-            }
-        };
-
-        script.onerror = () => {
-            cleanup();
-            reject(new Error('Lỗi kết nối'));
-        };
-
-        document.head.appendChild(script);
+    const phanhoi = await fetch(url, {
+        method   : 'GET',
+        redirect : 'follow',
     });
+    const duLieu = await phanhoi.json();
+
+    if (!duLieu.thanhCong && duLieu.thongBao) {
+        throw new Error(duLieu.thongBao);
+    }
+
+    return duLieu;
 };
 
 /*
