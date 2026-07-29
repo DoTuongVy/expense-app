@@ -7,8 +7,7 @@
 !=======================================================================================
 */
 
-const API_BASE = '/api';
-
+const API_BASE = 'https://script.google.com/macros/s/AKfycbzGKu-DwMfZ_KcXfK4EYkOlsFvh8r5lWf7btNP6hGwnigPYmvp3o8BxLBzMauQ8-hE/exec';
 /*
 !=======================================================================================
  ! Hàm gọi API chung
@@ -16,19 +15,26 @@ const API_BASE = '/api';
 */
 
 const goiApi = async (endpoint, tuyChan = {}) => {
-    const cauHinh = {
-        headers: { 'Content-Type': 'application/json' },
-        ...tuyChan,
-    };
+    const method = (tuyChan.method || 'GET').toUpperCase();
 
-    if (cauHinh.body && typeof cauHinh.body === 'object') {
-        cauHinh.body = JSON.stringify(cauHinh.body);
+    const [duongDan, queryString] = endpoint.replace(/^\//, '').split('?');
+    const params = new URLSearchParams(queryString || '');
+    params.set('path', duongDan);
+
+    // ! Tất cả đều dùng GET để tránh CORS preflight
+    if (method !== 'GET') {
+        let body = tuyChan.body || {};
+        if (typeof body === 'string') body = JSON.parse(body);
+        body._method = method;
+        params.set('_body',   JSON.stringify(body));
+        params.set('_method', method);
     }
 
-    const phanhoi   = await fetch(API_BASE + endpoint, cauHinh);
-    const duLieu    = await phanhoi.json();
+    const url = API_BASE + '?' + params.toString();
 
-    // ! Nếu server trả về lỗi thì throw để catch ở trên xử lý
+    const phanhoi = await fetch(url, { method: 'GET' });
+    const duLieu  = await phanhoi.json();
+
     if (!duLieu.thanhCong && phanhoi.status >= 400) {
         throw new Error(duLieu.thongBao || 'Lỗi không xác định');
     }
@@ -47,11 +53,11 @@ const goiApi = async (endpoint, tuyChan = {}) => {
 */
 
 const ApiKyThang = {
-    layHienTai : ()          => goiApi('/ky-thang/hien-tai'),
-    layTatCa   : ()          => goiApi('/ky-thang'),
-    chotThang  : (id, body)  => goiApi(`/ky-thang/${id}/chot`, { method: 'POST', body }),
-    capNhatSoDu: (id, body) => goiApi(`/ky-thang/${id}/cap-nhat-sodu`, { method: 'PUT', body }),
-    huyChot: (id) => goiApi(`/ky-thang/${id}/huy-chot`, { method: 'PUT' }),
+    layHienTai  : ()          => goiApi('/ky-thang/hien-tai'),
+    layTatCa    : ()          => goiApi('/ky-thang'),
+    chotThang   : (id, body)  => goiApi('/ky-thang/chot',       { method: 'POST', body: { id, ...body } }),
+    capNhatSoDu : (id, body)  => goiApi('/ky-thang/cap-nhat-sodu', { method: 'PUT', body: { id, ...body } }),
+    huyChot     : (id)        => goiApi('/ky-thang/huy-chot',   { method: 'PUT',  body: { id } }),
 };
 
 /*
@@ -66,9 +72,9 @@ const ApiGiaoDich = {
         if (loai) url += `&loai=${loai}`;
         return goiApi(url);
     },
-    them  : (body) => goiApi('/giao-dich',      { method: 'POST',   body }),
-    sua   : (id, body) => goiApi(`/giao-dich/${id}`, { method: 'PUT',    body }),
-    xoa   : (id)   => goiApi(`/giao-dich/${id}`, { method: 'DELETE' }),
+    them : (body)     => goiApi('/giao-dich', { method: 'POST',   body }),
+    sua  : (id, body) => goiApi('/giao-dich', { method: 'PUT',    body: { id, ...body } }),
+    xoa  : (id)       => goiApi('/giao-dich', { method: 'DELETE', body: { id } }),
 };
 
 /*
@@ -83,10 +89,11 @@ const ApiDanhMuc = {
         if (nhom) url += `?nhom=${nhom}`;
         return goiApi(url);
     },
-    them : (body) => goiApi('/danh-muc',       { method: 'POST',   body }),
-    sua  : (id, body) => goiApi(`/danh-muc/${id}`, { method: 'PUT',    body }),
-    an   : (id)   => goiApi(`/danh-muc/${id}`, { method: 'DELETE' }),
+    them : (body)     => goiApi('/danh-muc', { method: 'POST',   body }),
+    sua  : (id, body) => goiApi('/danh-muc', { method: 'PUT',    body: { id, ...body } }),
+    an   : (id)       => goiApi('/danh-muc', { method: 'DELETE', body: { id } }),
 };
+
 
 /*
 !=======================================================================================
@@ -96,8 +103,8 @@ const ApiDanhMuc = {
 
 const ApiMucTieu = {
     layTheoThang : (thang, nam) => goiApi(`/muc-tieu?thang=${thang}&nam=${nam}`),
-    datMucTieu   : (body)       => goiApi('/muc-tieu',       { method: 'POST',   body }),
-    xoa          : (id)         => goiApi(`/muc-tieu/${id}`, { method: 'DELETE' }),
+    datMucTieu   : (body)       => goiApi('/muc-tieu',  { method: 'POST',   body }),
+    xoa          : (id)         => goiApi('/muc-tieu',  { method: 'DELETE', body: { id } }),
 };
 
 /*
@@ -119,14 +126,14 @@ const ApiBaoCao = {
 */
 
 const ApiNo = {
-    layTatCa      : (trangThai) => {
+    layTatCa     : (trangThai) => {
         let url = '/no';
         if (trangThai) url += `?trangThai=${trangThai}`;
         return goiApi(url);
     },
-    them          : (body)        => goiApi('/no',             { method: 'POST',   body }),
-    capNhatDaTra  : (id, body)    => goiApi(`/no/${id}/tra`,   { method: 'PUT',    body }),
-    xoa           : (id)          => goiApi(`/no/${id}`,       { method: 'DELETE' }),
+    them         : (body)      => goiApi('/no', { method: 'POST',   body }),
+    capNhatDaTra : (id, body)  => goiApi('/no', { method: 'PUT',    body: { id, ...body } }),
+    xoa          : (id)        => goiApi('/no', { method: 'DELETE', body: { id } }),
 };
 
 /*
@@ -138,11 +145,11 @@ const ApiNo = {
 const ApiMatKhau = {
     layTatCa  : (nhom, q) => goiApi(`/mat-khau?${new URLSearchParams({ nhom: nhom||'', q: q||'' })}`),
     layNhom   : ()        => goiApi('/mat-khau/nhom'),
-    layTheoId : (id)      => goiApi(`/mat-khau/${id}`),
-    them      : (body)    => goiApi('/mat-khau',                          { method: 'POST',   body }),
-    sua       : (id, body)=> goiApi(`/mat-khau/${id}`,                    { method: 'PUT',    body }),
-    xoaLichSu : (id, lsId)=> goiApi(`/mat-khau/${id}/lich-su/${lsId}`,   { method: 'DELETE' }),
-    xoa       : (id)      => goiApi(`/mat-khau/${id}`,                    { method: 'DELETE' }),
+    layTheoId : (id)      => goiApi(`/mat-khau?id=${id}`),
+    them      : (body)    => goiApi('/mat-khau', { method: 'POST',   body }),
+    sua       : (id, body)=> goiApi('/mat-khau', { method: 'PUT',    body: { id, ...body } }),
+    xoaLichSu : (id, lsId)=> goiApi('/mat-khau', { method: 'PUT',   body: { id, xoaLichSuId: lsId } }),
+    xoa       : (id)      => goiApi('/mat-khau', { method: 'DELETE', body: { id } }),
 };
 
 /*
@@ -152,9 +159,9 @@ const ApiMatKhau = {
 */
 
 const ApiChiTieuCoDinh = {
-    layTheoThang    : (thang, nam) => goiApi(`/chi-tieu-co-dinh?thang=${thang}&nam=${nam}`),
-    them            : (body)       => goiApi('/chi-tieu-co-dinh',              { method: 'POST',   body }),
-    sua             : (id, body)   => goiApi(`/chi-tieu-co-dinh/${id}`,        { method: 'PUT',    body }),
-    xoa             : (id)         => goiApi(`/chi-tieu-co-dinh/${id}`,        { method: 'DELETE' }),
-    capNhatTrangThai: (id, body)   => goiApi(`/chi-tieu-co-dinh/${id}/trang-thai`, { method: 'PUT', body }),
+    layTheoThang     : (thang, nam) => goiApi(`/chi-tieu-co-dinh?thang=${thang}&nam=${nam}`),
+    them             : (body)       => goiApi('/chi-tieu-co-dinh',       { method: 'POST',   body }),
+    sua              : (id, body)   => goiApi('/chi-tieu-co-dinh',       { method: 'PUT',    body: { id, ...body } }),
+    xoa              : (id)         => goiApi('/chi-tieu-co-dinh',       { method: 'DELETE', body: { id } }),
+    capNhatTrangThai : (id, body)   => goiApi('/chi-tieu-co-dinh/dong',  { method: 'POST',   body: { recurringId: id, ...body } }),
 };
