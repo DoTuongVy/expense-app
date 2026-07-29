@@ -23,7 +23,9 @@ exports.handler = async (event) => {
     try {
         const params    = new URLSearchParams(event.queryStringParameters || {});
         const targetUrl = GAS_URL + '?' + params.toString();
+        console.log('Target URL:', targetUrl);
         const data      = await fetchFollow(targetUrl);
+        console.log('Response:', data.substring(0, 200));
 
         return {
             statusCode : 200,
