@@ -7,7 +7,7 @@
 !=======================================================================================
 */
 
-const API_BASE = 'https://script.google.com/macros/s/AKfycbzGKu-DwMfZ_KcXfK4EYkOlsFvh8r5lWf7btNP6hGwnigPYmvp3o8BxLBzMauQ8-hE/exec';
+const API_BASE = '/api/proxy';
 /*
 !=======================================================================================
  ! Hàm gọi API chung
@@ -33,11 +33,8 @@ const goiApi = async (endpoint, tuyChan = {}) => {
 
     const url = API_BASE + '?' + params.toString();
 
-    const phanhoi = await fetch(url, {
-        method   : 'GET',
-        redirect : 'follow',
-    });
-    const duLieu = await phanhoi.json();
+    const phanhoi = await fetch(url, { method: 'GET' });
+    const duLieu  = await phanhoi.json();
 
     if (!duLieu.thanhCong && duLieu.thongBao) {
         throw new Error(duLieu.thongBao);
