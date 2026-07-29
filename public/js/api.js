@@ -14,32 +14,60 @@ const API_BASE = 'https://script.google.com/macros/s/AKfycbzGKu-DwMfZ_KcXfK4EYkO
 !=======================================================================================
 */
 
-const goiApi = async (endpoint, tuyChan = {}) => {
-    const method = (tuyChan.method || 'GET').toUpperCase();
+const goiApi = (endpoint, tuyChan = {}) => {
+    return new Promise((resolve, reject) => {
+        const method = (tuyChan.method || 'GET').toUpperCase();
 
-    const [duongDan, queryString] = endpoint.replace(/^\//, '').split('?');
-    const params = new URLSearchParams(queryString || '');
-    params.set('path', duongDan);
+        const [duongDan, queryString] = endpoint.replace(/^\//, '').split('?');
+        const extraParams = new URLSearchParams(queryString || '');
+        const params = new URLSearchParams();
+        params.set('path', duongDan);
+        extraParams.forEach((v, k) => params.set(k, v));
 
-    // ! Tất cả đều dùng GET để tránh CORS preflight
-    if (method !== 'GET') {
-        let body = tuyChan.body || {};
-        if (typeof body === 'string') body = JSON.parse(body);
-        body._method = method;
-        params.set('_body',   JSON.stringify(body));
-        params.set('_method', method);
-    }
+        // ! Gửi body qua _body param
+        if (method !== 'GET') {
+            let body = tuyChan.body || {};
+            if (typeof body === 'string') body = JSON.parse(body);
+            body._method = method;
+            params.set('_body',   JSON.stringify(body));
+            params.set('_method', method);
+        }
 
-    const url = API_BASE + '?' + params.toString();
+        // ! JSONP — tránh CORS hoàn toàn
+        const cbName  = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+        params.set('callback', cbName);
 
-    const phanhoi = await fetch(url, { method: 'GET' });
-    const duLieu  = await phanhoi.json();
+        const url     = API_BASE + '?' + params.toString();
+        const script  = document.createElement('script');
+        script.src    = url;
 
-    if (!duLieu.thanhCong && phanhoi.status >= 400) {
-        throw new Error(duLieu.thongBao || 'Lỗi không xác định');
-    }
+        const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error('Timeout'));
+        }, 15000);
 
-    return duLieu;
+        function cleanup() {
+            clearTimeout(timer);
+            delete window[cbName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = (duLieu) => {
+            cleanup();
+            if (!duLieu.thanhCong && duLieu.thongBao) {
+                reject(new Error(duLieu.thongBao));
+            } else {
+                resolve(duLieu);
+            }
+        };
+
+        script.onerror = () => {
+            cleanup();
+            reject(new Error('Lỗi kết nối'));
+        };
+
+        document.head.appendChild(script);
+    });
 };
 
 /*
@@ -53,11 +81,11 @@ const goiApi = async (endpoint, tuyChan = {}) => {
 */
 
 const ApiKyThang = {
-    layHienTai  : ()          => goiApi('/ky-thang/hien-tai'),
+    layHienTai  : ()          => goiApi('/ky-thang-hien-tai'),
     layTatCa    : ()          => goiApi('/ky-thang'),
-    chotThang   : (id, body)  => goiApi('/ky-thang/chot',       { method: 'POST', body: { id, ...body } }),
-    capNhatSoDu : (id, body)  => goiApi('/ky-thang/cap-nhat-sodu', { method: 'PUT', body: { id, ...body } }),
-    huyChot     : (id)        => goiApi('/ky-thang/huy-chot',   { method: 'PUT',  body: { id } }),
+    chotThang   : (id, body)  => goiApi('/ky-thang-chot',        { method: 'POST', body: { id, ...body } }),
+    capNhatSoDu : (id, body)  => goiApi('/ky-thang-cap-nhat-sodu', { method: 'PUT', body: { id, ...body } }),
+    huyChot     : (id)        => goiApi('/ky-thang-huy-chot',    { method: 'PUT',  body: { id } }),
 };
 
 /*
@@ -114,9 +142,9 @@ const ApiMucTieu = {
 */
 
 const ApiBaoCao = {
-    baoCaoThang : (thang, nam) => goiApi(`/bao-cao/thang?thang=${thang}&nam=${nam}`),
-    baoCaoNam   : (nam)        => goiApi(`/bao-cao/nam?nam=${nam}`),
-    chiTheoNgay : (thang, nam) => goiApi(`/bao-cao/chi-theo-ngay?thang=${thang}&nam=${nam}`),
+    baoCaoThang : (thang, nam) => goiApi(`/bao-cao-thang?thang=${thang}&nam=${nam}`),
+    baoCaoNam   : (nam)        => goiApi(`/bao-cao-nam?nam=${nam}`),
+    chiTheoNgay : (thang, nam) => goiApi(`/bao-cao-thang?thang=${thang}&nam=${nam}`),
 };
 
 /*
@@ -163,5 +191,5 @@ const ApiChiTieuCoDinh = {
     them             : (body)       => goiApi('/chi-tieu-co-dinh',       { method: 'POST',   body }),
     sua              : (id, body)   => goiApi('/chi-tieu-co-dinh',       { method: 'PUT',    body: { id, ...body } }),
     xoa              : (id)         => goiApi('/chi-tieu-co-dinh',       { method: 'DELETE', body: { id } }),
-    capNhatTrangThai : (id, body)   => goiApi('/chi-tieu-co-dinh/dong',  { method: 'POST',   body: { recurringId: id, ...body } }),
+capNhatTrangThai : (id, body)   => goiApi('/ctcd-dong',  { method: 'POST', body: { recurringId: id, ...body } }),
 };

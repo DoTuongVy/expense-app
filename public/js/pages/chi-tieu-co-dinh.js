@@ -152,7 +152,7 @@ const sapDenHan = ds.filter(k =>
                 }
             </td>
             <td style="display:flex;gap:4px;align-items:center;justify-content:flex-end">
-                <button class="btn-icon" onclick="trangChiTieuCoDinh.moModalSua('${id}', '${k.ten.replace(/'/g,"\\'")}', ${k.soTien}, ${k.ngayDenHan}, '${k.danhMucId}', '${(k.ghiChu||'').replace(/'/g,"\\'")}')">✏️</button>
+<button class="btn-icon" onclick="trangChiTieuCoDinh.moModalSua('${id}', '${k.ten.replace(/'/g,"\\'")}', ${k.soTien}, ${k.ngayDenHan}, '${k.danhMucId}', '${(k.ghiChu||'').replace(/'/g,"\\'")}', '${k.thangApDung||''}')">✏️</button>
                 <button class="btn-icon del" onclick="trangChiTieuCoDinh.xoa('${id}', '${k.ten.replace(/'/g,"\\'")}')">🗑️</button>
             </td>
         </tr>`;
@@ -187,14 +187,15 @@ const sapDenHan = ds.filter(k =>
     },
 
     // ? Modal sửa
-    moModalSua: async (id, ten, soTien, ngay, danhMucId, ghiChu) => {
+   moModalSua: async (id, ten, soTien, ngay, danhMucId, ghiChu, thangApDung) => {
         await trangChiTieuCoDinh._loadDanhMucVaoModal();
-        document.getElementById('fi-ctcd-id').value      = id;
-        document.getElementById('fi-ctcd-ten').value     = ten;
-        document.getElementById('fi-ctcd-sotien').value  = soTien.toLocaleString('vi-VN');
-        document.getElementById('fi-ctcd-ngay').value    = ngay;
-        document.getElementById('fi-ctcd-ghichu').value  = ghiChu;
-        document.getElementById('fi-ctcd-danhmuc').value = danhMucId;
+        document.getElementById('fi-ctcd-id').value             = id;
+        document.getElementById('fi-ctcd-ten').value            = ten;
+        document.getElementById('fi-ctcd-sotien').value         = soTien.toLocaleString('vi-VN');
+        document.getElementById('fi-ctcd-ngay').value           = ngay;
+        document.getElementById('fi-ctcd-ghichu').value         = ghiChu;
+        document.getElementById('fi-ctcd-danhmuc').value        = danhMucId;
+        document.getElementById('fi-ctcd-thang-ap-dung').value  = thangApDung || '';
         document.getElementById('modal-ctcd-title').textContent = 'Sửa khoản cố định';
         UI.moModal('modal-ctcd');
         setTimeout(() => document.getElementById('fi-ctcd-ten').focus(), 100);
@@ -220,7 +221,8 @@ const sapDenHan = ds.filter(k =>
         const soTien    = parseTien(document.getElementById('fi-ctcd-sotien').value);
         const ngayDenHan= parseInt(document.getElementById('fi-ctcd-ngay').value);
         const danhMucId = document.getElementById('fi-ctcd-danhmuc').value;
-        const ghiChu    = document.getElementById('fi-ctcd-ghichu').value.trim();
+const ghiChu        = document.getElementById('fi-ctcd-ghichu').value.trim();
+        const thangApDung   = document.getElementById('fi-ctcd-thang-ap-dung').value.trim();
 
         if (!ten)                          { hienToast('Nhập tên khoản!', 'err'); return; }
         if (!soTien || soTien <= 0)        { hienToast('Nhập số tiền!', 'err'); return; }
@@ -230,10 +232,10 @@ const sapDenHan = ds.filter(k =>
 
         try {
             if (id) {
-                await ApiChiTieuCoDinh.sua(id, { ten, soTien, ngayDenHan, danhMucId, ghiChu });
+await ApiChiTieuCoDinh.sua(id, { ten, soTien, ngayDenHan, danhMucId, ghiChu, thangApDung });
                 hienToast('Đã cập nhật khoản cố định', 'ok');
             } else {
-                await ApiChiTieuCoDinh.them({ ten, soTien, ngayDenHan, danhMucId, ghiChu });
+await ApiChiTieuCoDinh.them({ ten, soTien, ngayDenHan, danhMucId, ghiChu, thangApDung });
                 hienToast('Đã thêm khoản cố định', 'ok');
             }
             UI.dongModal('modal-ctcd');
