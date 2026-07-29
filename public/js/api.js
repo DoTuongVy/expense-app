@@ -7,7 +7,7 @@
 !=======================================================================================
 */
 
-const API_BASE = '/api/proxy';
+const API_BASE = 'https://script.google.com/macros/s/AKfycby_vmNImGlORKS7gTyuNT8OwZCvDO4TogHNc3KBcA5Vnfo685fPYLTojR3_374R8zu7/exec';
 /*
 !=======================================================================================
  ! Hàm gọi API chung
